@@ -19,16 +19,16 @@ const COLORS = {
 };
 
 type Mode = "idle" | "tap" | "yap" | "type";
-export default function FooterCTA({setMode}: {setMode: React.Dispatch<React.SetStateAction<Mode>> }) {
+export default function FooterCTA({setMode, disabled = false}: {setMode: React.Dispatch<React.SetStateAction<Mode>>; disabled?: boolean }) {
 
     return (
 
         <View>
             {/* Bottom Buttons row: tap / yap / type */}
 
-            <View style={styles.bottomContainer}>
+            <View style={[styles.bottomContainer, disabled ? { opacity: 0.5 } : undefined]}>
                 <View style={styles.btn55Container}>
-                    <TouchableOpacity style={styles.btn50} onPress={() => setMode("type")}>
+                    <TouchableOpacity style={styles.btn50} disabled={disabled} onPress={() => setMode("tap")}>
                         <Ionicons name="checkmark-circle-outline" size={30} color={COLORS.onPrimaryContainer} />
                     </TouchableOpacity>
                     <Text style={styles.btnLabel}>tap</Text>
@@ -36,7 +36,7 @@ export default function FooterCTA({setMode}: {setMode: React.Dispatch<React.SetS
 
                 {/* Center 80 */}
                 <View style={styles.btn80Container}>
-                    <TouchableOpacity style={styles.btn80} onPress={() => setMode("yap")}>
+                    <TouchableOpacity style={styles.btn80} disabled={disabled} onPress={() => setMode("yap")}>
                         <Image
                             source={require("../assets/images/yap-icon.png")} // local image
                             style={{ width: 50, height: 50 }}
@@ -49,7 +49,7 @@ export default function FooterCTA({setMode}: {setMode: React.Dispatch<React.SetS
 
                 {/* Right 50 */}
                 <View style={styles.btn55Container}>
-                    <TouchableOpacity style={styles.btn50} onPress={()=>{setMode("type")}}> 
+                    <TouchableOpacity style={styles.btn50} disabled={disabled} onPress={()=>{setMode("type")}}> 
                         <Ionicons name="chatbubble-ellipses-outline" size={30} color={COLORS.onPrimaryContainer} />
                     </TouchableOpacity>
                     <Text style={styles.btnLabel}>type</Text>

@@ -34,7 +34,7 @@ const COLORS = {
   }
 
   
-export default function Avatar() {
+export default function Avatar({ showMessage = true }: { showMessage?: boolean }) {
     const fadeAnim1 = useRef(new Animated.Value(1)).current;
   const fadeAnim2 = useRef(new Animated.Value(0)).current;
 
@@ -96,15 +96,15 @@ export default function Avatar() {
 
         </View>
 
-        <View style={styles.introTextContainer}>
+        {showMessage && (
+          <View style={styles.introTextContainer}>
             <GradientText style={styles.introText}>How was your bloating this week?</GradientText>
           </View>
+        )}
 
         </View>
 
-        
-
-
+      
     );
 }
 
