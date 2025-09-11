@@ -5,8 +5,8 @@ import { Ionicons } from "@expo/vector-icons";
 import MaskedView from "@react-native-masked-view/masked-view";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
-import React, { useState } from "react";
-import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { Image, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 // Constants
@@ -31,6 +31,11 @@ type Message = {
   id: string;
   text: string;
   isBot: boolean;
+};
+
+type ChoiceOption = {
+  id: string;
+  text: string;
 };
 
 // Components
@@ -64,6 +69,42 @@ function UserMessage({ text }: { text: string }) {
   );
 }
 
+function ChoiceButton({ 
+  option, 
+  isSelected, 
+  onPress 
+}: { 
+  option: ChoiceOption; 
+  isSelected: boolean; 
+  onPress: () => void; 
+}) {
+  return (
+    <TouchableOpacity
+      style={[
+        styles.choiceButton,
+        isSelected && styles.choiceButtonSelected
+      ]}
+      onPress={onPress}
+      activeOpacity={0.8}
+    >
+      {isSelected ? (
+        <LinearGradient
+          colors={[COLORS.gradPurple, COLORS.gradPink]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.choiceButtonGradient}
+        >
+          <View style={styles.choiceButtonTextContainer}>
+            <Text style={styles.choiceButtonText}>{option.text}</Text>
+          </View>
+        </LinearGradient>
+      ) : (
+        <Text style={styles.choiceButtonTextUnselected}>{option.text}</Text>
+      )}
+    </TouchableOpacity>
+  );
+}
+
 // Main Component
 export default function Index() {
   const [mode, setMode] = useState<Mode>("idle");
@@ -80,6 +121,84 @@ export default function Index() {
   const [showSlider, setShowSlider] = useState(true);
   const [showSelectedValue, setShowSelectedValue] = useState(false);
 
+  // Multiple choice options for tap mode
+  const choiceOptions: ChoiceOption[] = [
+    { id: "ate-out-more", text: "Ate out more" },
+    { id: "ate-more-carbs", text: "Ate more carbs" },
+    { id: "ate-more-dairy", text: "Ate more dairy" },
+    { id: "skipped-meals", text: "Skipped meals" },
+    { id: "untimely-eating", text: "Untimely eating" },
+    { id: "less-sleep", text: "Less sleep" },
+    { id: "more-stress", text: "More stress/workload" },
+    { id: "more-caffeine", text: "More caffeine" },
+    { id: "more-alcohol", text: "More alcohol" },
+  ];
+
+  const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+
+  // ScrollView refs for auto-scrolling
+  const typeScrollRef = useRef<ScrollView>(null);
+  const tapScrollRef = useRef<ScrollView>(null);
+  const yapScrollRef = useRef<ScrollView>(null);
+  const idleScrollRef = useRef<ScrollView>(null);
+  const textInputRef = useRef<TextInput>(null);
+
+  // Function to scroll to bottom of the current mode's ScrollView
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      switch (mode) {
+        case "type":
+          typeScrollRef.current?.scrollToEnd({ animated: true });
+          break;
+        case "tap":
+          tapScrollRef.current?.scrollToEnd({ animated: true });
+          break;
+        case "yap":
+          yapScrollRef.current?.scrollToEnd({ animated: true });
+          break;
+        case "idle":
+          idleScrollRef.current?.scrollToEnd({ animated: true });
+          break;
+      }
+    }, 100); // Small delay to ensure the new message is rendered
+  };
+
+  // Auto-scroll to bottom when switching modes (to show latest messages)
+  useEffect(() => {
+    scrollToBottom();
+    
+    // Focus TextInput when switching to type mode on Android
+    if (mode === 'type' && Platform.OS === 'android') {
+      setTimeout(() => {
+        textInputRef.current?.focus();
+      }, 300);
+    }
+  }, [mode]);
+
+  // Handle keyboard events for Android
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+        // Ensure the input is visible when keyboard shows
+        setTimeout(() => {
+          scrollToBottom();
+        }, 100);
+      });
+
+      const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+        // Reset any adjustments when keyboard hides
+        setTimeout(() => {
+          scrollToBottom();
+        }, 100);
+      });
+
+      return () => {
+        keyboardDidShowListener?.remove();
+        keyboardDidHideListener?.remove();
+      };
+    }
+  }, []);
+
   const handleSend = (text?: string) => {
     const messageText = text || value.trim();
     if (messageText) {
@@ -91,6 +210,40 @@ export default function Index() {
       setMessages(prev => [...prev, newMessage]);
       console.log("Sent:", messageText);
       if (!text) setValue("");
+      
+      // Scroll to bottom after adding new message
+      scrollToBottom();
+    }
+  };
+
+  const toggleOption = (optionId: string) => {
+    setSelectedOptions(prev => 
+      prev.includes(optionId) 
+        ? prev.filter(id => id !== optionId)
+        : [...prev, optionId]
+    );
+  };
+
+  const sendSelectedOptions = () => {
+    if (selectedOptions.length > 0) {
+      const selectedTexts = selectedOptions.map(id => 
+        choiceOptions.find(option => option.id === id)?.text
+      ).filter(Boolean);
+      
+      const messageText = selectedTexts.join(", ");
+      handleSend(messageText);
+      setSelectedOptions([]); // Clear selections after sending
+      
+      // Add bot response after a short delay
+      setTimeout(() => {
+        const botResponse: Message = {
+          id: Date.now().toString() + "_bot",
+          text: "Were there any big changes in your week? related to food, lifestyle, stress, etc",
+          isBot: true,
+        };
+        setMessages(prev => [...prev, botResponse]);
+        scrollToBottom();
+      }, 500);
     }
   };
 
@@ -135,6 +288,10 @@ export default function Index() {
     // Show selected value for 1 second, then hide and show conversation
     setTimeout(() => {
       setShowSelectedValue(false);
+      // Scroll to bottom when conversation appears
+      setTimeout(() => {
+        idleScrollRef.current?.scrollToEnd({ animated: true });
+      }, 100);
     }, 1000);
   };
 
@@ -237,6 +394,7 @@ export default function Index() {
       ) : (
         <>
           <ScrollView
+            ref={idleScrollRef}
             style={styles.messagesContainer}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
@@ -255,6 +413,7 @@ export default function Index() {
   const renderTypeMode = () => (
     <>
       <ScrollView
+        ref={typeScrollRef}
         style={styles.messagesContainer}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -279,12 +438,16 @@ export default function Index() {
       <View style={styles.inputContainer}>
         <View style={styles.inputField}>
           <TextInput
+            ref={textInputRef}
             style={styles.textInput}
             placeholder="I'm here to listen..."
             placeholderTextColor={COLORS.greyLight}
             value={value}
             onChangeText={setValue}
             multiline
+            returnKeyType="default"
+            blurOnSubmit={false}
+            textBreakStrategy="simple"
           />
         </View>
         {value.trim() === "" ? (
@@ -317,25 +480,39 @@ export default function Index() {
   const renderTapMode = () => (
     <>
       <ScrollView
+        ref={tapScrollRef}
         style={styles.messagesContainer}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        <Avatar showMessage={true} />
-        <View style={styles.tapResponseContainer}>
-          <View style={styles.responseOptions}>
-            <TouchableOpacity style={styles.responseButton} onPress={() => handleSend("Better")}>
-              <Text style={styles.responseButtonText}>Better</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.responseButton} onPress={() => handleSend("Same")}>
-              <Text style={styles.responseButtonText}>Same</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.responseButton} onPress={() => handleSend("Worse")}>
-              <Text style={styles.responseButtonText}>Worse</Text>
-            </TouchableOpacity>
+        <Avatar showMessage={false} />
+        <View style={styles.messagesWrapper}>
+          {messages.map((message, index) => (
+            <View key={message.id}>
+              {message.isBot ? (
+                <BotMessage text={message.text} />
+              ) : (
+                <UserMessage text={message.text} />
+              )}
+              {index === 0 && !showSlider && sliderValue > 0 && (
+                <UserMessage text={`${sliderValue} = ${getBloatingLabel(sliderValue)} bloating`} />
+              )}
+            </View>
+          ))}
+        </View>
+        <View style={styles.choiceOptionsContainer}>
+          <View style={styles.choiceOptionsGrid}>
+            {choiceOptions.map((option) => (
+              <ChoiceButton
+                key={option.id}
+                option={option}
+                isSelected={selectedOptions.includes(option.id)}
+                onPress={() => toggleOption(option.id)}
+              />
+            ))}
           </View>
         </View>
-        <View style={{ flex: 3 }} />
+        <View style={{ flex: 1 }} />
       </ScrollView>
 
       <View style={styles.CTAWrapper}>
@@ -359,15 +536,24 @@ export default function Index() {
         </View>
         <View>
           <View style={styles.btn55Container}>
-            <TouchableOpacity style={styles.sendButtonLg} onPress={() => handleSend()}>
+            <TouchableOpacity 
+              style={[
+                styles.sendButtonLg, 
+                selectedOptions.length === 0 && styles.sendButtonDisabled
+              ]} 
+              onPress={sendSelectedOptions}
+              disabled={selectedOptions.length === 0}
+            >
               <LinearGradient
-                colors={[COLORS.gradPurple, COLORS.gradPink]}
+                colors={selectedOptions.length > 0 ? [COLORS.gradPurple, COLORS.gradPink] : ['#E3B2C5', '#E3B2C5']}
                 style={styles.sendButtonGradient}
               >
                 <Ionicons name="send" size={20} color={COLORS.white} />
               </LinearGradient>
             </TouchableOpacity>
-            <Text style={styles.btnLabel}>send</Text>
+            <Text style={styles.btnLabel}>
+              {selectedOptions.length > 0 ? `send (${selectedOptions.length})` : 'send'}
+            </Text>
           </View>
         </View>
       </View>
@@ -376,12 +562,33 @@ export default function Index() {
 
   const renderYapMode = () => (
     <>
+      <ScrollView
+        ref={yapScrollRef}
+        style={styles.messagesContainer}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <Avatar showMessage={false} />
+        <View style={styles.messagesWrapper}>
+          {messages.map((message, index) => (
+            <View key={message.id}>
+              {message.isBot ? (
+                <BotMessage text={message.text} />
+              ) : (
+                <UserMessage text={message.text} />
+              )}
+              {index === 0 && !showSlider && sliderValue > 0 && (
+                <UserMessage text={`${sliderValue} = ${getBloatingLabel(sliderValue)} bloating`} />
+              )}
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+
       <View style={styles.yapContainer}>
-        <Avatar showMessage={true} />
-        
         {isRecording ? (
           <View style={styles.statusContainer}>
-            <Text style={styles.statusText}>Listening.</Text>
+            <Text style={styles.statusText}>Listening...</Text>
           </View>
         ) : recordingComplete ? (
           <View style={styles.timerContainer}>
@@ -421,39 +628,47 @@ export default function Index() {
     </>
   );
 
+  const renderContent = () => (
+    <View style={styles.root}>
+      <Header />
+
+      {mode === "idle" && renderIdleMode()}
+      {mode === "type" && renderTypeMode()}
+      {mode === "tap" && renderTapMode()}
+      {mode === "yap" && renderYapMode()}
+
+      {/* Background Gradients */}
+      <LinearGradient
+        colors={["rgb(203, 180, 240)", "rgb(245, 162, 194)"]}
+        start={{ x: 0, y: 0.5 }}
+        end={{ x: 1, y: 0.5 }}
+        style={styles.gradientBase}
+      />
+      <LinearGradient
+        colors={["rgba(255,255,255,1)", "rgba(255,255,255,0)"]}
+        style={styles.gradientFade}
+      />
+
+      {mode === "idle" && (
+        <FooterCTA setMode={setMode} disabled={showSlider || showSelectedValue} />
+      )}
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <StatusBar style="dark" />
-      <KeyboardAvoidingView
-        style={styles.kav}
-        behavior={Platform.OS === "ios" ? "height" : undefined}
-        keyboardVerticalOffset={0}
-      >
-        <View style={styles.root}>
-          <Header />
-
-          {mode === "idle" && renderIdleMode()}
-          {mode === "type" && renderTypeMode()}
-          {mode === "tap" && renderTapMode()}
-          {mode === "yap" && renderYapMode()}
-
-          {/* Background Gradients */}
-          <LinearGradient
-            colors={["rgb(203, 180, 240)", "rgb(245, 162, 194)"]}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
-            style={styles.gradientBase}
-          />
-          <LinearGradient
-            colors={["rgba(255,255,255,1)", "rgba(255,255,255,0)"]}
-            style={styles.gradientFade}
-          />
-
-          {mode === "idle" && (
-            <FooterCTA setMode={setMode} disabled={showSlider || showSelectedValue} />
-          )}
-        </View>
-      </KeyboardAvoidingView>
+      {mode === "type" ? (
+        <KeyboardAvoidingView
+          style={styles.kav}
+          behavior={Platform.OS === "ios" ? "height" : "padding"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+        >
+          {renderContent()}
+        </KeyboardAvoidingView>
+      ) : (
+        renderContent()
+      )}
     </SafeAreaView>
   );
 }
@@ -510,6 +725,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     marginBottom: 15,
     paddingLeft: 15,
+    zIndex: 1,
   },
   botMessageBubble: {
     maxWidth: '80%',
@@ -531,6 +747,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     marginBottom: 15,
     paddingRight: 15,
+    zIndex: 1,
   },
   userMessageBubble: {
     maxWidth: '80%',
@@ -554,7 +771,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     paddingVertical: 15,
-    marginBottom: 15,
     paddingHorizontal: 15,
   },
   inputField: {
@@ -610,28 +826,71 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  // Tap response
-  tapResponseContainer: {
+  // Choice options
+  choiceOptionsContainer: {
     paddingHorizontal: 15,
     paddingVertical: 20,
   },
-  responseOptions: {
+  choiceOptionsGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'flex-end',
+    gap: 5,
+    paddingBottom: 10, // Add bottom padding for better spacing
   },
-  responseButton: {
-    backgroundColor: '#FDF4F8',
-    paddingHorizontal: 15,
-    paddingVertical: 15,
+  choiceButton: {
+    width: 'auto',
+    marginBottom: 5,
     borderRadius: 20,
-    minWidth: 80,
-    alignItems: 'center',
-    marginLeft: 8,
+    overflow: 'hidden',
+    // minHeight: 44, // Consistent height for both states
   },
-  responseButtonText: {
+  choiceButtonSelected: {
+    // Additional styles for selected state if needed
+  },
+  choiceButtonGradient: {
+    paddingHorizontal: 15,
+    paddingVertical: 12, // Same padding as unselected
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 44, // Same height as unselected
+    flex: 1, // Take full available space
+    width: '100%', // Ensure full width
+  },
+  choiceButtonTextContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+  },
+  choiceButtonText: {
     fontSize: 14,
     fontFamily: "Inter",
     fontWeight: '400',
+    color: COLORS.white,
+    textAlign: 'center',
+    lineHeight: 18, // Same line height as unselected
+    includeFontPadding: false, // Remove extra font padding
+  },
+  choiceButtonTextUnselected: {
+    fontSize: 14,
+    fontFamily: "Inter",
+    fontWeight: '400',
+    color: COLORS.onSurface,
+    textAlign: 'center',
+    paddingHorizontal: 15,
+    paddingVertical: 12, // Same padding as selected
+    backgroundColor: '#FDF4F8',
+    borderRadius: 20,
+    // borderWidth: 1,
+    // borderColor: COLORS.outlineVariant,
+    minHeight: 44, // Same height as selected
+    lineHeight: 18, // Same line height as selected
+    includeFontPadding: false, // Remove extra font padding
+    textAlignVertical: 'center', // Center text vertically
+  },
+  sendButtonDisabled: {
+    opacity: 0.5,
   },
 
   // CTA wrapper
@@ -656,38 +915,47 @@ const styles = StyleSheet.create({
 
   // Yap mode styles
   yapContainer: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
+    paddingVertical: 20,
   },
   statusContainer: {
-    marginVertical: 40,
+    // marginVertical: 20,
   },
   statusText: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: "Inter",
     color: COLORS.greyMedium,
     textAlign: 'center',
   },
   timerContainer: {
-    marginVertical: 40,
+    // marginVertical: 40,
   },
   timerText: {
-    fontSize: 24,
+    fontSize: 16,
     fontFamily: "Inter",
     color: COLORS.onSurface,
     textAlign: 'center',
   },
   yapSendButtonContainer: {
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 10,
+    marginBottom: 20,
   },
   yapSendButton: {
     width: 80,
     height: 80,
     borderRadius: 40,
     marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8, // For Android shadow
   },
   yapSendButtonGradient: {
     width: '100%',

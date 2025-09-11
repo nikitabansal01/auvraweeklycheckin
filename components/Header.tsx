@@ -36,6 +36,8 @@ const styles = StyleSheet.create({
     header:{
     height: 52,
     justifyContent: "center",
+    zIndex: 1000,
+    backgroundColor: COLORS.white,
     // borderBottomWidth: 1, 
     // borderBottomColor: COLORS.surfaceDivider 
   },
