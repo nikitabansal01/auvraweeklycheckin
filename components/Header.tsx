@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { FONT_FAMILIES } from '../lib/fonts';
 
 
 const COLORS = {
@@ -17,10 +18,19 @@ const COLORS = {
     gradPurple: "#A78BFA",
     gradPink: "#F0A3C2",
   };
-export default function Header() {
+interface HeaderProps {
+  onClose?: () => void;
+}
+
+export default function Header({ onClose }: HeaderProps) {
     return(
         <View style={styles.header}>
-            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Close" style={styles.closeBtn}>
+            <TouchableOpacity 
+              accessibilityRole="button" 
+              accessibilityLabel="Close" 
+              style={styles.closeBtn}
+              onPress={onClose}
+            >
               <Ionicons name="close-outline" size={32} color={COLORS.greyMedium} />
             </TouchableOpacity>
             <View style={styles.headerCenter}>
@@ -54,7 +64,7 @@ const styles = StyleSheet.create({
     color: COLORS.onSurface,
     fontSize: 16,
     fontWeight: "400",
-    fontFamily: "Noto Serif"
+    fontFamily: FONT_FAMILIES['NotoSerif-Regular']
   },
 
 });

@@ -2,6 +2,7 @@ import MaskedView from "@react-native-masked-view/masked-view";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
+import { FONT_FAMILIES } from '../lib/fonts';
 
 
 
@@ -147,7 +148,7 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         fontSize: 16,
         lineHeight: 18,
-        fontFamily: "Inter"
+        fontFamily: FONT_FAMILIES['Inter-Regular']
       },
       
 })

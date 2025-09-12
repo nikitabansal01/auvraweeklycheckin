@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { FONT_FAMILIES } from '../lib/fonts';
 
 
 const COLORS = {
@@ -101,7 +102,7 @@ const styles = StyleSheet.create({
         marginTop: 9,
         color: COLORS.onSurface,
         fontSize: 14,
-        fontFamily: "Inter"
+        fontFamily: FONT_FAMILIES['Inter-Regular']
     },
 
     btn80Container:
