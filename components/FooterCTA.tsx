@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { Image, Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { FONT_FAMILIES } from '../lib/fonts';
 
 
@@ -20,7 +21,23 @@ const COLORS = {
 };
 
 type Mode = "idle" | "tap" | "yap" | "type";
-export default function FooterCTA({setMode, disabled = false}: {setMode: React.Dispatch<React.SetStateAction<Mode>>; disabled?: boolean }) {
+export default function FooterCTA({
+    setMode, 
+    disabled = false,
+    isRecording = false,
+    recordingComplete = false,
+    onStartRecording,
+    onStopRecording,
+    onSendRecording
+}: {
+    setMode: React.Dispatch<React.SetStateAction<Mode>>; 
+    disabled?: boolean;
+    isRecording?: boolean;
+    recordingComplete?: boolean;
+    onStartRecording?: () => void;
+    onStopRecording?: () => void;
+    onSendRecording?: () => void;
+}) {
 
     return (
 
@@ -37,15 +54,53 @@ export default function FooterCTA({setMode, disabled = false}: {setMode: React.D
 
                 {/* Center 80 */}
                 <View style={styles.btn80Container}>
-                    <TouchableOpacity style={styles.btn80} disabled={disabled} onPress={() => setMode("yap")}>
-                        <Image
-                            source={require("../assets/images/yap-icon.png")} // local image
-                            style={{ width: 50, height: 50 }}
-                            resizeMode="contain"
-                        />
-                        {/* <MaterialCommunityIcons name="waveform" size={30} color={COLORS.onPrimaryContainer} /> */}
-                    </TouchableOpacity>
-                    <Text style={styles.btnLabelCenter}>yap</Text>
+                    {!disabled && isRecording ? (
+                        <Pressable
+                            style={styles.btn80}
+                            onPressIn={onStartRecording}
+                            onPressOut={onStopRecording}
+                        >
+                            <LinearGradient
+                                colors={[COLORS.gradPurple, COLORS.gradPink]}
+                                style={styles.btn80Gradient}
+                            >
+                                <Ionicons name="mic" size={30} color={COLORS.white} />
+                            </LinearGradient>
+                        </Pressable>
+                    ) : !disabled && recordingComplete ? (
+                        <TouchableOpacity style={styles.btn80} onPress={onSendRecording}>
+                            <LinearGradient
+                                colors={[COLORS.gradPurple, COLORS.gradPink]}
+                                style={styles.btn80Gradient}
+                            >
+                                <Ionicons name="send" size={30} color={COLORS.white} />
+                            </LinearGradient>
+                        </TouchableOpacity>
+                    ) : !disabled ? (
+                        <Pressable
+                            style={styles.btn80}
+                            onPressIn={onStartRecording}
+                            onPressOut={onStopRecording}
+                        >
+                            <Image
+                                source={require("../assets/images/yap-icon.png")} // local image
+                                style={{ width: 50, height: 50 }}
+                                resizeMode="contain"
+                            />
+                        </Pressable>
+                    ) : (
+                        <TouchableOpacity style={styles.btn80} disabled={disabled} onPress={() => setMode("idle")}>
+                            <Image
+                                source={require("../assets/images/yap-icon.png")} // local image
+                                style={{ width: 50, height: 50 }}
+                                resizeMode="contain"
+                            />
+                        </TouchableOpacity>
+                    )}
+                    <Text style={styles.btnLabelCenter}>
+                        {!disabled && isRecording ? "recording" : 
+                         !disabled && recordingComplete ? "send" : "yap"}
+                    </Text>
                 </View>
 
                 {/* Right 50 */}
@@ -118,6 +173,13 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.white,
         alignItems: "center",
         justifyContent: "center", ...shadowStrong
+    },
+    btn80Gradient: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 70,
+        alignItems: "center",
+        justifyContent: "center",
     },
     btnLabelCenter:
     {

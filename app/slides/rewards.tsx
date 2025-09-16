@@ -3,7 +3,8 @@ import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Image, ImageBackground, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useState } from "react";
+import { Dimensions, Image, ImageBackground, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FONT_FAMILIES, useAppFonts } from '../../lib/fonts';
 
@@ -12,13 +13,37 @@ const BACKGROUND_VECTOR_IMAGE = "http://localhost:3845/assets/cf926b4d5ec2719e28
 const MILESTONE_BG_IMAGE = require("../../assets/images/milestone-bg.png");
 const BLOOD_REPORT_IMAGE = require("../../assets/images/blood-report-logo.png");
 
+// Responsive dimensions
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const isAndroid = Platform.OS === 'android';
+const isIOS = Platform.OS === 'ios';
+
+// Responsive scaling factors
+const scaleWidth = screenWidth / 375; // Base width from design
+const scaleHeight = screenHeight / 812; // Base height from design
+const scale = Math.min(scaleWidth, scaleHeight);
+
 // Gradient Text Component
 function GradientText({ children, style }: { children: string; style?: any }) {
   return (
     <MaskedView
-      style={{ flexDirection: 'row', height: 20 }}
+      style={{ 
+        flexDirection: 'row', 
+        height: Math.round(Math.max(20, (style?.lineHeight || 20) * scale)),
+        ...(isAndroid && { 
+          renderToHardwareTextureAndroid: true,
+          needsOffscreenAlphaCompositing: true 
+        } as any)
+      }}
       maskElement={
-        <Text style={[style, { backgroundColor: 'transparent' }]}>
+        <Text style={[
+          style, 
+          { 
+            backgroundColor: 'transparent',
+            includeFontPadding: isAndroid ? false : undefined,
+            textAlignVertical: isAndroid ? 'center' : undefined,
+          }
+        ]}>
           {children}
         </Text>
       }
@@ -28,9 +53,23 @@ function GradientText({ children, style }: { children: string; style?: any }) {
         locations={[0, 0.3654, 0.571, 0.8336, 1.142]}
         start={{ x: 0, y: 0 }} 
         end={{ x: 1, y: 0 }}
-        style={{ flex: 1 }}
+        style={{ 
+          flex: 1,
+          ...(isAndroid && { 
+            renderToHardwareTextureAndroid: true 
+          } as any)
+        }}
       >
-        <Text style={[style, { opacity: 0 }]}>{children}</Text>
+        <Text style={[
+          style, 
+          { 
+            opacity: 0,
+            includeFontPadding: isAndroid ? false : undefined,
+            textAlignVertical: isAndroid ? 'center' : undefined,
+          }
+        ]}>
+          {children}
+        </Text>
       </LinearGradient>
     </MaskedView>
   );
@@ -70,7 +109,13 @@ function ProgressGradient({ progress }: { progress: number }) {
       locations={validLocations as any}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
-      style={[styles.progressFill, { width: `${progress}%` }]}
+      style={[
+        styles.progressFill, 
+        { 
+          width: `${progress}%`,
+          ...(isAndroid && { renderToHardwareTextureAndroid: true })
+        }
+      ]}
     />
   );
 }
@@ -88,10 +133,14 @@ const COLORS = {
   shadow: "rgba(0, 0, 0, 0.1)",
   shadowDark: "rgba(0, 0, 0, 0.25)",
   shadowPurple: "rgba(193, 126, 201, 0.5)",
+  gradPurple: "#A29AEA",
+  gradPink: "#FDC6D1",
 };
 
 
 // Types
+type RewardState = 'in_progress' | 'available' | 'claimed';
+
 type RewardItem = {
   id: string;
   title: string;
@@ -99,8 +148,8 @@ type RewardItem = {
   icon: string;
   backgroundColor: string;
   streak?: string;
-  isUnlocked: boolean;
-  isClaimed?: boolean;
+  requiredStreakDays: number;
+  state: RewardState;
   hasButton?: boolean;
   buttonText?: string;
 };
@@ -114,10 +163,198 @@ type Milestone = {
 
 export default function Rewards() {
   const fontsLoaded = useAppFonts();
+  const [currentStreakDays, setCurrentStreakDays] = useState(9); // Current streak from the UI
+  const [claimedRewards, setClaimedRewards] = useState<Set<string>>(new Set());
 
   const navigateToIndex = () => {
     router.back();
   };
+
+  const claimReward = (rewardId: string) => {
+    setClaimedRewards(prev => new Set([...prev, rewardId]));
+  };
+
+  const getRewardState = (item: RewardItem): RewardState => {
+    // If already claimed in state management, return claimed
+    if (claimedRewards.has(item.id)) {
+      return 'claimed';
+    }
+    // If marked as claimed in data, return claimed
+    if (item.state === 'claimed') {
+      return 'claimed';
+    }
+    // If streak requirement is met, return available
+    if (currentStreakDays >= item.requiredStreakDays) {
+      return 'available';
+    }
+    // Otherwise, return in_progress
+    return 'in_progress';
+  };
+
+  // Dynamic reward organization based on current state
+  const getAllRewards = (): RewardItem[] => {
+    return [
+      {
+        id: "1",
+        title: "Streak freeze",
+        description: "",
+        icon: "🧊",
+        backgroundColor: COLORS.lightBlue,
+        requiredStreakDays: 3,
+        state: 'claimed',
+      },
+      {
+        id: "2",
+        title: "Diet preferences",
+        description: "",
+        icon: "🥗",
+        backgroundColor: COLORS.lightViolet,
+        requiredStreakDays: 7,
+        state: 'available',
+        hasButton: true,
+        buttonText: "Personalize now",
+      },
+      {
+        id: "3",
+        title: "Food Allergies",
+        description: "Skip foods that don't work for your body",
+        icon: "🥜",
+        backgroundColor: COLORS.lightViolet,
+        streak: "12 day streak",
+        requiredStreakDays: 8,
+        state: 'in_progress',
+      },
+      {
+        id: "4",
+        title: "Symptom patterns unlocked",
+        description: "Understand your bodily trends",
+        icon: "✨",
+        backgroundColor: COLORS.lightYellow,
+        streak: "14 day streak",
+        requiredStreakDays: 14,
+        state: 'in_progress',
+      },
+      {
+        id: "5",
+        title: "2x plan refresh",
+        description: "Additional refreshes for the action plan",
+        icon: "🧊",
+        backgroundColor: COLORS.lightBlue,
+        streak: "16 day streak",
+        requiredStreakDays: 16,
+        state: 'in_progress',
+      },
+      {
+        id: "6",
+        title: "Ethnicity/cultural habits",
+        description: "Tailor the plan to your traditions & lifestyle",
+        icon: "🌏",
+        backgroundColor: COLORS.lightViolet,
+        streak: "18 day streak",
+        requiredStreakDays: 18,
+        state: 'in_progress',
+      },
+      {
+        id: "7",
+        title: "Cuisine preferences",
+        description: "The plan to adapts to your favorite cuisines",
+        icon: "🥘",
+        backgroundColor: COLORS.lightViolet,
+        streak: "12 day streak",
+        requiredStreakDays: 12,
+        state: 'in_progress',
+      },
+      {
+        id: "8",
+        title: "Dine out habits",
+        description: "Healthier alternatives to your fav order",
+        icon: "🍔",
+        backgroundColor: COLORS.lightViolet,
+        streak: "14 day streak",
+        requiredStreakDays: 14,
+        state: 'in_progress',
+      },
+      {
+        id: "9",
+        title: "BMI/Waist to height ratio",
+        description: "Adjust actions to your body's unique profile",
+        icon: "⚖️",
+        backgroundColor: COLORS.lightViolet,
+        streak: "18 day streak",
+        requiredStreakDays: 18,
+        state: 'in_progress',
+      },
+       {
+         id: "10",
+         title: "First signs of improvement",
+         description: "Start to feel relief for top concerns",
+         icon: "✨",
+         backgroundColor: COLORS.lightYellow,
+         streak: "21 day streak",
+         requiredStreakDays: 21,
+         state: 'in_progress',
+       },
+       // Rise Rewards
+       {
+         id: "11",
+         title: "2x plan refresh",
+         description: "Additional refreshes for the action plan",
+         icon: "🧊",
+         backgroundColor: COLORS.lightBlue,
+         streak: "12 days to go",
+         requiredStreakDays: 16,
+         state: 'in_progress',
+       },
+       {
+         id: "12",
+         title: "Cravings made healthy",
+         description: "Personalize support for food cravings",
+         icon: "🥮",
+         backgroundColor: COLORS.lightViolet,
+         streak: "18 day streak",
+         requiredStreakDays: 18,
+         state: 'in_progress',
+       },
+       {
+         id: "13",
+         title: "First signs of improvement",
+         description: "Start to feel relief for top concerns",
+         icon: "✨",
+         backgroundColor: COLORS.lightYellow,
+         streak: "21 day streak",
+         requiredStreakDays: 21,
+         state: 'in_progress',
+       },
+     ];
+   };
+
+  // Dynamically filter rewards based on their current state
+  const seedRewards = getAllRewards().filter(item => {
+    const state = getRewardState(item);
+    return state === 'claimed' || state === 'available';
+  }).map(item => {
+    const state = getRewardState(item);
+    // Automatically add button for available rewards
+    if (state === 'available') {
+      return {
+        ...item,
+        hasButton: true,
+        buttonText: "Personalize now"
+      };
+    }
+    return item;
+  });
+
+  const growRewards = getAllRewards().filter(item => {
+    const state = getRewardState(item);
+    return state === 'in_progress' && item.requiredStreakDays < 16;
+  });
+
+  const riseRewards = getAllRewards().filter(item => {
+    // Rise rewards are those with higher streak requirements (16+ days) and in progress
+    const state = getRewardState(item);
+    return state === 'in_progress' && item.requiredStreakDays >= 16;
+  });
 
   if (!fontsLoaded) {
     return null; // or a loading component
@@ -132,103 +369,6 @@ const milestones: Milestone[] = [
   { id: "5", name: "Glow", day: "Day 270", isActive: false },
 ];
 
-const seedRewards: RewardItem[] = [
-  {
-    id: "1",
-    title: "Streak freeze",
-    description: "",
-    icon: "🧊",
-    backgroundColor: COLORS.lightBlue,
-    isUnlocked: true,
-    isClaimed: true,
-  },
-  {
-    id: "2",
-    title: "Diet preferences",
-    description: "",
-    icon: "🥗",
-      backgroundColor: COLORS.lightViolet,
-    isUnlocked: true,
-    hasButton: true,
-    buttonText: "Personalize now",
-  },
-  {
-    id: "3",
-    title: "Food Allergies",
-    description: "Skip foods that don't work for your body",
-    icon: "🥜",
-      backgroundColor: COLORS.lightViolet,
-    streak: "12 day streak",
-    isUnlocked: true,
-  },
-  {
-    id: "4",
-    title: "Symptom patterns unlocked",
-    description: "Understand your bodily trends",
-    icon: "✨",
-    backgroundColor: COLORS.lightYellow,
-    streak: "14 day streak",
-    isUnlocked: true,
-  },
-];
-
-const growRewards: RewardItem[] = [
-  {
-    id: "5",
-    title: "2x plan refresh",
-    description: "Additional refreshes for the action plan",
-    icon: "🧊",
-    backgroundColor: COLORS.lightBlue,
-    streak: "16 day streak",
-      isUnlocked: true,
-  },
-  {
-    id: "6",
-    title: "Ethnicity/cultural habits",
-    description: "Tailor the plan to your traditions & lifestyle",
-    icon: "🌏",
-      backgroundColor: COLORS.lightViolet,
-    streak: "18 day streak",
-      isUnlocked: true,
-  },
-  {
-    id: "7",
-    title: "Cuisine preferences",
-    description: "The plan to adapts to your favorite cuisines",
-    icon: "🥘",
-      backgroundColor: COLORS.lightViolet,
-    streak: "12 day streak",
-      isUnlocked: true,
-  },
-  {
-    id: "8",
-    title: "Dine out habits",
-    description: "Healthier alternatives to your fav order",
-    icon: "🍔",
-      backgroundColor: COLORS.lightViolet,
-    streak: "14 day streak",
-      isUnlocked: true,
-  },
-  {
-    id: "9",
-    title: "BMI/Waist to height ratio",
-    description: "Adjust actions to your body's unique profile",
-    icon: "⚖️",
-      backgroundColor: COLORS.lightViolet,
-    streak: "18 day streak",
-      isUnlocked: true,
-  },
-  {
-    id: "10",
-    title: "First signs of improvement",
-    description: "Start to feel relief for top concerns",
-    icon: "✨",
-    backgroundColor: COLORS.lightYellow,
-    streak: "21 day streak",
-      isUnlocked: true,
-    },
-  ];
-
   const renderLabsSection = () => (
     <LinearGradient
       colors={[
@@ -241,15 +381,17 @@ const growRewards: RewardItem[] = [
       locations={[0.1479, 0.3858, 0.5196, 0.6906, 0.8913]}
       start={{ x: 0, y: 0 }}
       end={{ x: 0.8, y: 1 }}
-      style={styles.labsSection}
+      style={[
+        styles.labsSection,
+        isAndroid ? { renderToHardwareTextureAndroid: true } as any : undefined
+      ]}
     >
       
       <View style={styles.labsHeader}>
         <TouchableOpacity style={styles.backButton} onPress={navigateToIndex}>
           <Ionicons name="chevron-back" size={24} color={COLORS.black} />
         </TouchableOpacity>
-        <Text style={styles.labsTitle}>Personalize</Text>
-        <View style={styles.placeholder} />
+        <Text style={styles.labsTitleAligned}>Personalize</Text>
       </View>
 
       <View style={styles.labsContent}>
@@ -315,9 +457,50 @@ const growRewards: RewardItem[] = [
         
         <View style={styles.streakNumberContainer}>
           <View style={styles.streakNumberGradient}>
-            <MaskedView maskElement={<Text style={[styles.streakNumber, { backgroundColor: "transparent" }]}>9</Text>}>
-              <LinearGradient colors={['#A29AEA', '#C17EC9', '#D482B9', '#E98BAC', '#FDC6D1']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-                <Text style={[styles.streakNumber, { opacity: 0 }]}>9</Text>
+<MaskedView 
+              maskElement={
+                <Text style={[
+                  styles.streakNumber, 
+                  { 
+                    backgroundColor: "transparent",
+                    includeFontPadding: isAndroid ? false : undefined,
+                    textAlignVertical: isAndroid ? 'center' : undefined,
+                  }
+                ]}>
+                  9
+                </Text>
+              }
+              style={[
+                { 
+                  height: Math.round(styles.streakNumber.lineHeight || 100),
+                  ...(isAndroid && { 
+                    renderToHardwareTextureAndroid: true,
+                    needsOffscreenAlphaCompositing: true 
+                  } as any)
+                }
+              ]}
+            >
+              <LinearGradient 
+                colors={[COLORS.gradPurple, COLORS.gradPink]} 
+                start={{ x: 0, y: 0 }} 
+                end={{ x: 1, y: 0 }}
+                style={{ 
+                  flex: 1,
+                  ...(isAndroid && { 
+                    renderToHardwareTextureAndroid: true 
+                  } as any)
+                }}
+              >
+                <Text style={[
+                  styles.streakNumber, 
+                  { 
+                    opacity: 0,
+                    includeFontPadding: isAndroid ? false : undefined,
+                    textAlignVertical: isAndroid ? 'center' : undefined,
+                  }
+                ]}>
+                  9
+                </Text>
               </LinearGradient>
             </MaskedView>
           </View>
@@ -344,7 +527,7 @@ const growRewards: RewardItem[] = [
             <View key={milestone.id} style={styles.milestoneItem}>
       <View style={[
         styles.milestoneDot,
-                { backgroundColor: milestone.isActive ? COLORS.warmPurple : COLORS.greyLight }
+                { backgroundColor: milestone.isActive ? COLORS.warmPurple : '#D9D9D9' }
       ]} />
               <View style={styles.milestoneTextContainer}>
         <Text style={[
@@ -367,49 +550,113 @@ const growRewards: RewardItem[] = [
       </>
   );
 
-  const renderRewardItem = (item: RewardItem) => (
-    <View key={item.id} style={styles.rewardItem}>
-      <View style={[styles.rewardIconContainer, { backgroundColor: item.backgroundColor }]}>
-        <Text style={styles.rewardIcon}>{item.icon}</Text>
-      </View>
-      <View style={styles.rewardContent}>
-        <View style={styles.rewardHeader}>
-          <Text style={styles.rewardTitle}>{item.title}</Text>
-          {item.isClaimed && (
-            <Ionicons name="checkmark-circle" size={12} color={COLORS.warmPurple} />
+  const renderRewardItem = (item: RewardItem) => {
+    const currentState = getRewardState(item);
+    const isInProgress = currentState === 'in_progress';
+    const isClaimed = currentState === 'claimed';
+    const isAvailable = currentState === 'available';
+
+    return (
+      <View key={item.id} style={styles.rewardItem}>
+        <View style={[
+          styles.rewardIconContainer, 
+          { backgroundColor: item.backgroundColor }
+        ]}>
+          <Text style={styles.rewardIcon}>{item.icon}</Text>
+        </View>
+        <View style={styles.rewardContent}>
+          <View style={styles.rewardHeader}>
+            <Text style={styles.rewardTitle}>{item.title}</Text>
+            {isClaimed && (
+              <Ionicons name="checkmark-circle" size={16} color={COLORS.warmPurple} />
+            )}
+          </View>
+          {item.description && isInProgress && (
+            <Text style={styles.rewardDescription}>
+              {item.description}
+            </Text>
+          )}
+          {isAvailable && item.hasButton && (
+            <LinearGradient
+              colors={['#A29AEA', '#C17EC9', '#D482B9', '#E98BAC', '#FDC6D1']}
+              locations={[0, 0.4, 0.6, 0.9, 1]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[
+                styles.personalizeButtonGradient,
+                isAndroid ? { renderToHardwareTextureAndroid: true } as any : undefined
+              ]}
+            >
+              <TouchableOpacity 
+                style={styles.personalizeButton}
+                onPress={() => claimReward(item.id)}
+                activeOpacity={0.7}
+              >
+<MaskedView 
+                    maskElement={
+                      <Text style={[
+                        styles.personalizeButtonText, 
+                        { 
+                          backgroundColor: "transparent",
+                          includeFontPadding: isAndroid ? false : undefined,
+                          textAlignVertical: isAndroid ? 'center' : undefined,
+                        }
+                      ]}>
+                        {item.buttonText}
+                      </Text>
+                    }
+                    style={[
+                      { 
+                        height: Math.round(styles.personalizeButtonText.lineHeight || 22),
+                        ...(isAndroid && { 
+                          renderToHardwareTextureAndroid: true,
+                          needsOffscreenAlphaCompositing: true 
+                        } as any)
+                      }
+                    ]}
+                  >
+                    <LinearGradient 
+                      colors={['#A29AEA', '#C17EC9', '#D482B9', '#E98BAC', '#FDC6D1']} 
+                      start={{ x: 0, y: 0 }} 
+                      end={{ x: 1, y: 0 }}
+                      style={{ 
+                        flex: 1,
+                        ...(isAndroid && { 
+                          renderToHardwareTextureAndroid: true 
+                        } as any)
+                      }}
+                    >
+                      <Text style={[
+                        styles.personalizeButtonText, 
+                        { 
+                          opacity: 0,
+                          includeFontPadding: isAndroid ? false : undefined,
+                          textAlignVertical: isAndroid ? 'center' : undefined,
+                        }
+                      ]}>
+                        {item.buttonText}
+                      </Text>
+                    </LinearGradient>
+                  </MaskedView>
+              </TouchableOpacity>
+            </LinearGradient>
+          )}
+          {item.streak && !isAvailable && !isClaimed && (
+            <View style={styles.rewardFooter}>
+              <View style={styles.progressBar}>
+                <ProgressGradient progress={
+                  isInProgress 
+                    ? Math.min((currentStreakDays / item.requiredStreakDays) * 100, 100)
+                    : 70
+                } />
+              </View>
+              <Text style={[styles.streakText, isInProgress && styles.streakTextInProgress]}>{item.streak}</Text>
+            </View>
           )}
         </View>
-        {item.description && (
-          <Text style={styles.rewardDescription}>{item.description}</Text>
-        )}
-        {item.hasButton && (
-          <LinearGradient
-            colors={['#A29AEA', '#C17EC9', '#D482B9', '#E98BAC', '#FDC6D1']}
-            locations={[0, 0.4, 0.6, 0.9, 1]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.personalizeButtonGradient}
-          >
-            <TouchableOpacity style={styles.personalizeButton}>
-              <MaskedView maskElement={<Text style={[styles.personalizeButtonText, { backgroundColor: "transparent" }]}>{item.buttonText}</Text>}>
-                <LinearGradient colors={['#A29AEA', '#C17EC9', '#D482B9', '#E98BAC', '#FDC6D1']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-                  <Text style={[styles.personalizeButtonText, { opacity: 0 }]}>{item.buttonText}</Text>
-                </LinearGradient>
-              </MaskedView>
-            </TouchableOpacity>
-          </LinearGradient>
-        )}
-        {item.streak && (
-          <View style={styles.rewardFooter}>
-            <View style={styles.progressBar}>
-              <ProgressGradient progress={70} />
-            </View>
-            <Text style={styles.streakText}>{item.streak}</Text>
-          </View>
-        )}
       </View>
-    </View>
-  );
+    );
+  };
 
   const renderDivider = (text: string) => (
     <View style={styles.dividerContainer}>
@@ -420,9 +667,15 @@ const growRewards: RewardItem[] = [
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      <StatusBar style="dark" />
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={styles.container} edges={isAndroid ? ["top", "left", "right"] : ["top"]}>
+      <StatusBar style="dark" backgroundColor={isAndroid ? COLORS.background : undefined} />
+      <ScrollView 
+        style={styles.scrollView} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        bounces={isIOS}
+        overScrollMode={isAndroid ? "never" : "auto"}
+      >
         {renderLabsSection()}
         {renderStreakSection()}
         
@@ -435,6 +688,11 @@ const growRewards: RewardItem[] = [
           {renderDivider("Grow Rewards")}
           <View style={styles.rewardsList}>
             {growRewards.map(renderRewardItem)}
+          </View>
+
+          {renderDivider("Rise Rewards")}
+          <View style={styles.rewardsList}>
+            {riseRewards.map(renderRewardItem)}
           </View>
         </View>
         </ScrollView>
@@ -450,30 +708,47 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: isAndroid ? 20 : 0,
+  },
   labsSection: {
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
-    paddingTop: 30,
-    paddingHorizontal: 20,
+    paddingTop: isAndroid ? 25 : 30,
+    paddingHorizontal: Math.max(20, screenWidth * 0.053), // 5.3% of screen width
     paddingBottom: 20,
-    // marginBottom: 20,
     position: 'relative',
     overflow: 'hidden',
+    minHeight: isAndroid ? 200 : undefined,
   },
   
   labsHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 40,
+    justifyContent: 'flex-start',
+    marginBottom: isAndroid ? 25 : 30,
     zIndex: 1,
   },
+  labsTitleAligned: {
+    fontSize: Math.max(14, 14 * scale),
+    fontWeight: '500',
+    color: COLORS.black,
+    fontFamily: FONT_FAMILIES['NotoSerif-Regular'],
+    lineHeight: Math.max(21, 21 * scale),
+    position: 'absolute',
+    left: Math.max(126, 126 * scaleWidth), // Responsive positioning
+    includeFontPadding: isAndroid ? false : undefined,
+    textAlignVertical: isAndroid ? 'center' : undefined,
+  },
   backButton: {
-    width: 36,
-    height: 36,
+    width: Math.max(36, 36 * scale),
+    height: Math.max(36, 36 * scale),
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'transparent',
+    minWidth: 44, // Minimum touch target for accessibility
+    minHeight: 44,
   },
   labsTitle: {
     fontSize: 14,
@@ -494,64 +769,80 @@ const styles = StyleSheet.create({
   labsCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    gap: Math.max(16, 16 * scaleWidth),
   },
   labsIconContainer: {
-    width: 110,
-    height: 77,
+    width: Math.max(110, 110 * scaleWidth),
+    height: Math.max(77, 77 * scaleHeight),
     position: 'relative',
   },
   labsIcon: {
-    width: 80,
-    height: 80,
+    width: Math.max(80, 80 * scale),
+    height: Math.max(80, 80 * scale),
     backgroundColor: COLORS.white,
     borderRadius: 97,
     alignItems: 'center',
     justifyContent: 'center',
-    
+    ...(isAndroid && {
+      elevation: 2,
+      shadowColor: COLORS.shadow,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+    }),
   },
   bloodReportIcon: {
-    width: 80,
-    height: 80,
+    width: Math.max(80, 80 * scale),
+    height: Math.max(80, 80 * scale),
   },
   labsTag: {
     position: 'absolute',
     backgroundColor: COLORS.white,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: Math.max(8, 8 * scale),
+    paddingVertical: Math.max(3, 3 * scale),
     borderRadius: 40,
     shadowColor: COLORS.shadowDark,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.45,
     shadowRadius: 3,
-    
+    ...(isAndroid && {
+      elevation: 3,
+    }),
   },
   labsTagText: {
-    fontSize: 10,
+    fontSize: Math.max(10, 10 * scale),
     color: COLORS.warmPurple,
     fontFamily: FONT_FAMILIES['Inter-Regular'],
+    includeFontPadding: isAndroid ? false : undefined,
+    textAlignVertical: isAndroid ? 'center' : undefined,
   },
   labsTextContainer: {
     flex: 1,
-    gap: 8,
+    gap: Math.max(8, 8 * scale),
   },
   labsTitleText: {
-    fontSize: 14,
+    fontSize: Math.max(14, 14 * scale),
     fontWeight: '500',
     color: COLORS.black,
     fontFamily: FONT_FAMILIES['NotoSerif-Regular'],
-    lineHeight: 21,
+    lineHeight: Math.max(21, 21 * scale),
+    includeFontPadding: isAndroid ? false : undefined,
+    textAlignVertical: isAndroid ? 'center' : undefined,
   },
   labsDescriptionText: {
-    fontSize: 12,
+    fontSize: Math.max(12, 12 * scale),
     color: COLORS.greyMedium,
     fontFamily: FONT_FAMILIES['Inter-Regular'],
-    lineHeight: 15,
+    lineHeight: Math.max(15, 15 * scale),
+    includeFontPadding: isAndroid ? false : undefined,
+    textAlignVertical: isAndroid ? 'center' : undefined,
   },
   uploadButtonContainer: {
     paddingHorizontal: 0,
     zIndex: 1,
-    marginVertical: 10,
+    marginTop: 10,
+    marginBottom: 15,
+
   },
   uploadButton: {
     backgroundColor: COLORS.white,
@@ -560,37 +851,36 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 10,
-    elevation: 5,
+    elevation: isAndroid ? 5 : 0,
     borderWidth: 0,
+    minHeight: 48,
   },
   uploadButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 11,
-    paddingHorizontal: 35,
-    gap: 3,
-    height: 48,
+    paddingVertical: Math.max(11, 11 * scale),
+    paddingHorizontal: Math.max(35, 35 * scaleWidth),
+    gap: Math.max(3, 3 * scale),
+    height: Math.max(48, 48 * scale),
+    minHeight: 48,
   },
   uploadButtonText: {
-    fontSize: 14,
+    fontSize: Math.max(14, 14 * scale),
     fontWeight: '500',
     color: COLORS.black,
     fontFamily: FONT_FAMILIES['Inter-Medium'],
-    // lineHeight: 14,
     letterSpacing: 0,
+    includeFontPadding: isAndroid ? false : undefined,
+    textAlignVertical: isAndroid ? 'center' : undefined,
   },
   streakSection: {
-    // paddingHorizontal: 20,
-    // paddingVertical: 30,
-    // marginHorizontal: 20,
-    marginBottom: 20,
-    gap: 30,
+    marginBottom: Math.max(20, 20 * scaleHeight),
+    gap: Math.max(30, 30 * scaleHeight),
     position: 'relative',
     overflow: 'hidden',
-    // height: '100%',
     backgroundColor: COLORS.white,
-    // backgroundPosition: 'top',
+    minHeight: isAndroid ? 300 : undefined,
   },
   streakGradientOverlay: {
     position: 'absolute',
@@ -606,15 +896,17 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   streakTitle: {
-    fontSize: 14,
+    fontSize: Math.max(14, 14 * scale),
     fontWeight: '500',
     color: COLORS.black,
     textAlign: 'center',
     fontFamily: FONT_FAMILIES['NotoSerif-Regular'],
-    lineHeight: 21,
-    marginBottom: 50,
-    marginTop: 40,
+    lineHeight: Math.max(21, 21 * scale),
+    marginBottom: Math.max(50, 50 * scaleHeight),
+    marginTop: Math.max(40, 40 * scaleHeight),
     width: '100%',
+    includeFontPadding: isAndroid ? false : undefined,
+    textAlignVertical: isAndroid ? 'center' : undefined,
   },
   streakNumberContainer: {
     alignItems: 'center',
@@ -632,49 +924,59 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
   streakNumber: {
-    fontSize: 80,
+    fontSize: Math.max(80, 80 * scale),
     fontWeight: '700',
-    fontFamily: FONT_FAMILIES['NotoSerif-Bold'],
-    lineHeight: 100,
+    fontFamily: FONT_FAMILIES['NotoSerif-Regular'],
+    lineHeight: Math.max(100, 100 * scale),
     textAlign: 'center',  
-    verticalAlign: 'middle',  
+    verticalAlign: 'middle',
+    includeFontPadding: isAndroid ? false : undefined,
+    textAlignVertical: isAndroid ? 'center' : undefined,
   },
   streakLabel: {
-    fontSize: 12,
+    fontSize: Math.max(12, 12 * scale),
     color: COLORS.black,
     fontFamily: FONT_FAMILIES['NotoSerif-Regular'],
-    lineHeight: 18,
+    lineHeight: Math.max(18, 18 * scale),
     backgroundColor: COLORS.white,
-    paddingHorizontal: 30,
-    paddingTop: 8,
+    paddingHorizontal: Math.max(30, 30 * scaleWidth),
+    paddingTop: Math.max(8, 8 * scale),
+    includeFontPadding: isAndroid ? false : undefined,
+    textAlignVertical: isAndroid ? 'center' : undefined,
   },
   top20Badge: {
     backgroundColor: '#FFFDEC',
-    paddingHorizontal: 6,
-    paddingVertical: 4,
+    paddingHorizontal: Math.max(6, 6 * scale),
+    paddingVertical: Math.max(4, 4 * scale),
+    borderRadius: isAndroid ? 4 : 0,
   },
   top20Text: {
-    fontSize: 12,
+    fontSize: Math.max(12, 12 * scale),
     fontWeight: '600',
     color: '#F6C34C',
     fontFamily: FONT_FAMILIES['Inter-Regular'],
-    lineHeight: 15,
+    lineHeight: Math.max(15, 15 * scale),
+    includeFontPadding: isAndroid ? false : undefined,
+    textAlignVertical: isAndroid ? 'center' : undefined,
   },
   milestonesContainer: {
     width: '100%',
-    padding: 12,
+    paddingVertical: Math.max(12, 12 * scaleHeight),
+    paddingHorizontal: Math.max(20, 20 * scaleWidth),
     backgroundColor: COLORS.white,
     borderRadius: 10,
     position: 'relative',
     overflow: 'hidden',
     zIndex: 2,
+    marginHorizontal: isAndroid ? 0 : undefined,
   },
   milestonesProgress: {
-    height: 51,
+    height: Math.max(51, 51 * scaleHeight),
     position: 'relative',
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
+    minHeight: isAndroid ? 51 : undefined,
   },
   milestoneVector1: {
     position: 'absolute',
@@ -700,7 +1002,7 @@ const styles = StyleSheet.create({
     left: 15,
     right: 15,
     height: 1,
-    backgroundColor: COLORS.greyLight,
+    backgroundColor: '#D9D9D9',
   },
   progressLineActive: {
     position: 'absolute',
@@ -713,37 +1015,42 @@ const styles = StyleSheet.create({
   },
   milestoneItem: {
     alignItems: 'center',
-    gap: 10,
+    gap: Math.max(10, 10 * scale),
+    flex: 1,
   },
   milestoneDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: Math.max(12, 12 * scale),
+    height: Math.max(12, 12 * scale),
+    borderRadius: Math.max(6, 6 * scale),
   },
   milestoneTextContainer: {
     alignItems: 'center',
-    gap: 2,
+    gap: Math.max(2, 2 * scale),
   },
   milestoneName: {
-    fontSize: 12,
+    fontSize: Math.max(12, 12 * scale),
     fontWeight: '500',
     fontFamily: FONT_FAMILIES['Inter-Regular'],
-    lineHeight: 15,
+    lineHeight: Math.max(15, 15 * scale),
+    includeFontPadding: isAndroid ? false : undefined,
+    textAlignVertical: isAndroid ? 'center' : undefined,
   },
   milestoneDay: {
-    fontSize: 8,
+    fontSize: Math.max(8, 8 * scale),
     fontFamily: FONT_FAMILIES['Inter-Regular'],
-    lineHeight: 10,
+    lineHeight: Math.max(10, 10 * scale),
+    includeFontPadding: isAndroid ? false : undefined,
+    textAlignVertical: isAndroid ? 'center' : undefined,
   },
   rewardsContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
+    paddingHorizontal: Math.max(20, 20 * scaleWidth),
+    paddingBottom: Math.max(40, 40 * scaleHeight),
   },
   dividerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 26,
-    gap: 6,
+    marginVertical: Math.max(26, 26 * scaleHeight),
+    gap: Math.max(6, 6 * scale),
   },
   dividerLine: {
     flex: 1,
@@ -751,64 +1058,84 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.greyLight,
   },
   dividerText: {
-    fontSize: 14,
+    fontSize: Math.max(14, 14 * scale),
     fontWeight: '500',
     color: COLORS.greyMedium,
     fontFamily: FONT_FAMILIES['NotoSerif-Regular'],
-    lineHeight: 21,
+    lineHeight: Math.max(21, 21 * scale),
+    includeFontPadding: isAndroid ? false : undefined,
+    textAlignVertical: isAndroid ? 'center' : undefined,
   },
   rewardsList: {
-    gap: 20,
-    marginBottom: 20,
+    gap: Math.max(20, 20 * scaleHeight),
+    marginBottom: Math.max(20, 20 * scaleHeight),
+  },
+  // In progress state styles
+  streakTextInProgress: {
+    color: COLORS.warmPurple,
   },
   rewardItem: {
     flexDirection: 'row',
     alignItems: 'center',    
-    gap: 16,
+    gap: Math.max(16, 16 * scaleWidth),
+    minHeight: isAndroid ? 80 : undefined,
   },
   rewardIconContainer: {
-    width: 62,
-    height: 62,
+    width: Math.max(62, 62 * scale),
+    minHeight: Math.max(62, 62 * scale),
+    height: '100%',
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 5,
+    paddingHorizontal: Math.max(5, 5 * scale),
+    ...(isAndroid && {
+      elevation: 1,
+      shadowColor: COLORS.shadow,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 1,
+    }),
   },
   rewardIcon: {
-    fontSize: 32,
+    fontSize: Math.max(32, 32 * scale),
   },
   rewardContent: {
     flex: 1,
-    gap: 10,
+    gap: Math.max(10, 10 * scale),
   },
   rewardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: Math.max(5, 5 * scale),
   },
   rewardTitle: {
-    fontSize: 14,
+    fontSize: Math.max(14, 14 * scale),
     fontWeight: '500',
     color: COLORS.black,
     fontFamily: FONT_FAMILIES['NotoSerif-Regular'],
-    lineHeight: 21,
+    lineHeight: Math.max(21, 21 * scale),
+    includeFontPadding: isAndroid ? false : undefined,
+    textAlignVertical: isAndroid ? 'center' : undefined,
   },
   rewardDescription: {
-    fontSize: 12,
+    fontSize: Math.max(12, 12 * scale),
     color: COLORS.greyLight,
     fontFamily: FONT_FAMILIES['Inter-Regular'],
-    lineHeight: 15,
+    lineHeight: Math.max(15, 15 * scale),
+    includeFontPadding: isAndroid ? false : undefined,
+    textAlignVertical: isAndroid ? 'center' : undefined,
   },
   personalizeButtonGradient: {
     borderRadius: 10,
-    padding: 2, // Increased padding for better visibility
+    padding: Math.max(2, 2 * scale),
   },
   personalizeButton: {
     backgroundColor: COLORS.white,
-    borderRadius: 8, // Adjusted to account for the 2px gradient border
-    paddingVertical: 9,
+    borderRadius: 8,
+    paddingVertical: Math.max(9, 9 * scale),
     width: '100%',
-    paddingHorizontal: 14,
+    paddingHorizontal: Math.max(14, 14 * scale),
+    minHeight: isAndroid ? 36 : undefined,
   },
   gradientTextContainer: {
     flex: 1,
@@ -821,10 +1148,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   personalizeButtonText: {
-    fontSize: 12,
+    fontSize: Math.max(12, 12 * scale),
     fontFamily: FONT_FAMILIES['Inter-Regular'],
-    lineHeight: 22,
+    lineHeight: Math.max(22, 22 * scale),
     textAlign: 'center',
+    includeFontPadding: isAndroid ? false : undefined,
+    textAlignVertical: isAndroid ? 'center' : undefined,
   },
   rewardFooter: {
     flexDirection: 'row',
@@ -833,19 +1162,21 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     flex: 1,
-    height: 13,
+    height: Math.max(13, 13 * scale),
     backgroundColor: '#EEE1F4',
-    borderRadius: 6.5,
-    marginRight: 16,
+    borderRadius: Math.max(6.5, 6.5 * scale),
+    marginRight: Math.max(16, 16 * scaleWidth),
   },
   progressFill: {
     height: '100%',
-    borderRadius: 6.5,
+    borderRadius: Math.max(6.5, 6.5 * scale),
   },
   streakText: {
-    fontSize: 10,
+    fontSize: Math.max(10, 10 * scale),
     color: COLORS.warmPurple,
     fontFamily: FONT_FAMILIES['Inter-Regular'],
-    lineHeight: 12.5,
+    lineHeight: Math.max(12.5, 12.5 * scale),
+    includeFontPadding: isAndroid ? false : undefined,
+    textAlignVertical: isAndroid ? 'center' : undefined,
   },
 });

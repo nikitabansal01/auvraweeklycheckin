@@ -7,9 +7,19 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
-import { Image, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Dimensions, Image, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FONT_FAMILIES, useAppFonts } from '../../lib/fonts';
+
+// Responsive dimensions
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const isAndroid = Platform.OS === 'android';
+const isIOS = Platform.OS === 'ios';
+
+// Responsive scaling factors
+const scaleWidth = screenWidth / 375; // Base width from design
+const scaleHeight = screenHeight / 812; // Base height from design
+const scale = Math.min(scaleWidth, scaleHeight);
 
 // Constants
 const COLORS = {
@@ -43,9 +53,49 @@ type ChoiceOption = {
 // Components
 function GradientText({ children, style }: { children: string; style?: any }) {
   return (
-    <MaskedView maskElement={<Text style={[style, { backgroundColor: "transparent" }]}>{children}</Text>}>
-      <LinearGradient colors={[COLORS.gradPurple, COLORS.gradPink]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-        <Text style={[style, { opacity: 0 }]}>{children}</Text>
+    <MaskedView 
+      maskElement={
+        <Text style={[
+          style, 
+          { 
+            backgroundColor: "transparent",
+            includeFontPadding: isAndroid ? false : undefined,
+            textAlignVertical: isAndroid ? 'center' : undefined,
+          }
+        ]}>
+          {children}
+        </Text>
+      }
+      style={[
+        { 
+          ...(isAndroid && { 
+            renderToHardwareTextureAndroid: true,
+            needsOffscreenAlphaCompositing: true 
+          } as any)
+        }
+      ]}
+    >
+      <LinearGradient 
+        colors={[COLORS.gradPurple, COLORS.gradPink]} 
+        start={{ x: 0, y: 0 }} 
+        end={{ x: 1, y: 0 }}
+        style={{ 
+          flex: 1,
+          ...(isAndroid && { 
+            renderToHardwareTextureAndroid: true 
+          } as any)
+        }}
+      >
+        <Text style={[
+          style, 
+          { 
+            opacity: 0,
+            includeFontPadding: isAndroid ? false : undefined,
+            textAlignVertical: isAndroid ? 'center' : undefined,
+          }
+        ]}>
+          {children}
+        </Text>
       </LinearGradient>
     </MaskedView>
   );
@@ -142,7 +192,6 @@ export default function Chatbot() {
   // ScrollView refs for auto-scrolling
   const typeScrollRef = useRef<ScrollView>(null);
   const tapScrollRef = useRef<ScrollView>(null);
-  const yapScrollRef = useRef<ScrollView>(null);
   const idleScrollRef = useRef<ScrollView>(null);
   const textInputRef = useRef<TextInput>(null);
 
@@ -155,9 +204,6 @@ export default function Chatbot() {
           break;
         case "tap":
           tapScrollRef.current?.scrollToEnd({ animated: true });
-          break;
-        case "yap":
-          yapScrollRef.current?.scrollToEnd({ animated: true });
           break;
         case "idle":
           idleScrollRef.current?.scrollToEnd({ animated: true });
@@ -272,7 +318,9 @@ export default function Chatbot() {
   };
 
   const sendRecording = () => {
-    handleSend("Voice message");
+    const duration = formatTime(recordingTime);
+    const voiceMessage = `Voice message (${duration})`;
+    handleSend(voiceMessage);
     setRecordingComplete(false);
     setRecordingTime(0);
   };
@@ -288,12 +336,12 @@ export default function Chatbot() {
     setShowSlider(false);
     setShowSelectedValue(true);
 
-    // Show selected value for 1 second, then hide and show conversation
+    // Show selected value for 1 second, then show conversation in idle mode
     setTimeout(() => {
       setShowSelectedValue(false);
       // Scroll to bottom when conversation appears
       setTimeout(() => {
-        idleScrollRef.current?.scrollToEnd({ animated: true });
+        scrollToBottom();
       }, 100);
     }, 1000);
   };
@@ -323,10 +371,10 @@ export default function Chatbot() {
   };
 
   const renderIdleMode = () => (
-    <>
+    <View style={styles.idleModeContainer}>
       {showSlider ? (
-        <>
-          <View style={{ flex: 1 }} />
+        <View style={styles.sliderPageContainer}>
+          <View style={styles.sliderTopSpacer} />
           <Avatar showMessage={true} />
 
           <View style={styles.sliderContainer}>
@@ -356,11 +404,11 @@ export default function Chatbot() {
             </View>
           </View>
 
-          <View style={{ flex: 1 }} />
-        </>
+          <View style={styles.sliderBottomSpacer} />
+        </View>
       ) : showSelectedValue ? (
-        <>
-          <View style={{ flex: 1 }} />
+        <View style={styles.sliderPageContainer}>
+          <View style={styles.sliderTopSpacer} />
           <Avatar showMessage={true} />
 
           <View style={styles.selectedValueContainer}>
@@ -392,8 +440,8 @@ export default function Chatbot() {
             </View>
           </View>
 
-          <View style={{ flex: 1 }} />
-        </>
+          <View style={styles.sliderBottomSpacer} />
+        </View>
       ) : (
         <>
           <ScrollView
@@ -404,13 +452,40 @@ export default function Chatbot() {
           >
             <Avatar showMessage={true} />
             <View style={styles.messagesWrapper}>
-              <UserMessage text={`${sliderValue} = ${getBloatingLabel(sliderValue)} bloating`} />
-              <BotMessage text="Were there any big changes in your week? related to food, lifestyle, stress, etc" />
+              {/* Always show slider value as first message if available */}
+              {sliderValue > 0 && (
+                <UserMessage text={`${sliderValue} = ${getBloatingLabel(sliderValue)} bloating`} />
+              )}
+              {/* Show initial bot response if no messages yet */}
+              {messages.length === 0 && sliderValue > 0 && (
+                <BotMessage text="Were there any big changes in your week? related to food, lifestyle, stress, etc" />
+              )}
+              {/* Show all messages from the messages array */}
+              {messages.map((message, index) => (
+                <View key={message.id}>
+                  {message.isBot ? (
+                    <BotMessage text={message.text} />
+                  ) : (
+                    <UserMessage text={message.text} />
+                  )}
+                </View>
+              ))}
             </View>
           </ScrollView>
+
+          {/* Recording status display */}
+          {(isRecording || recordingComplete) && (
+            <View style={styles.recordingStatusContainer}>
+              {isRecording ? (
+                <Text style={styles.recordingStatusText}>Recording... {formatTime(recordingTime)}</Text>
+              ) : recordingComplete ? (
+                <Text style={styles.recordingStatusText}>Recording complete! {formatTime(recordingTime)}</Text>
+              ) : null}
+            </View>
+          )}
         </>
       )}
-    </>
+    </View>
   );
 
   const renderTypeMode = () => (
@@ -454,7 +529,7 @@ export default function Chatbot() {
         </View>
         {value.trim() === "" ? (
           <>
-            <TouchableOpacity style={styles.whiteButton} onPress={() => setMode("yap")}>
+            <TouchableOpacity style={styles.whiteButton} onPress={() => setMode("idle")}>
               <Image
                 source={require("./../../assets/images/yap-icon.png")}
                 style={{ width: 25, height: 25 }}
@@ -526,7 +601,7 @@ export default function Chatbot() {
             <Text style={styles.btnLabel}>type</Text>
           </View>
           <View style={styles.btn55Container}>
-            <TouchableOpacity style={styles.whiteButton} onPress={() => setMode("yap")}>
+            <TouchableOpacity style={styles.whiteButton} onPress={() => setMode("idle")}>
               <Image
                 source={require("./../../assets/images/yap-icon.png")}
                 style={{ width: 25, height: 25 }}
@@ -562,86 +637,18 @@ export default function Chatbot() {
     </>
   );
 
-  const renderYapMode = () => (
-    <>
-      <ScrollView
-        ref={yapScrollRef}
-        style={styles.messagesContainer}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        <Avatar showMessage={false} />
-        <View style={styles.messagesWrapper}>
-          {messages.map((message, index) => (
-            <View key={message.id}>
-              {message.isBot ? (
-                <BotMessage text={message.text} />
-              ) : (
-                <UserMessage text={message.text} />
-              )}
-              {index === 0 && !showSlider && sliderValue > 0 && (
-                <UserMessage text={`${sliderValue} = ${getBloatingLabel(sliderValue)} bloating`} />
-              )}
-            </View>
-          ))}
-        </View>
-      </ScrollView>
-
-      <View style={styles.yapContainer}>
-        {isRecording ? (
-          <View style={styles.statusContainer}>
-            <Text style={styles.statusText}>Listening...</Text>
-          </View>
-        ) : recordingComplete ? (
-          <View style={styles.timerContainer}>
-            <Text style={styles.timerText}>{formatTime(recordingTime)}</Text>
-          </View>
-        ) : null}
-
-        <View style={styles.yapSendButtonContainer}>
-          {isRecording || !recordingComplete ? (
-            <Pressable
-              style={styles.yapSendButton}
-              onPressIn={startRecording}
-              onPressOut={stopRecording}
-            >
-              <LinearGradient
-                colors={[COLORS.gradPurple, COLORS.gradPink]}
-                style={styles.yapSendButtonGradient}
-              >
-                <Ionicons name="mic" size={30} color={COLORS.white} />
-              </LinearGradient>
-            </Pressable>
-          ) : (
-            <TouchableOpacity style={styles.yapSendButton} onPress={sendRecording}>
-              <LinearGradient
-                colors={[COLORS.gradPurple, COLORS.gradPink]}
-                style={styles.yapSendButtonGradient}
-              >
-                <Ionicons name="send" size={30} color={COLORS.white} />
-              </LinearGradient>
-            </TouchableOpacity>
-          )}
-          <Text style={styles.yapSendButtonLabel}>
-            {isRecording ? "yap" : recordingComplete ? "send" : "yap"}
-          </Text>
-        </View>
-      </View>
-    </>
-  );
 
   const navigateToIndex = () => {
     router.back();
   };
 
   const renderContent = () => (
-    <View style={styles.root}>
+    <View style={[styles.root, mode === "idle" && styles.rootIdle]}>
       <Header onClose={navigateToIndex} />
 
       {mode === "idle" && renderIdleMode()}
       {mode === "type" && renderTypeMode()}
       {mode === "tap" && renderTapMode()}
-      {mode === "yap" && renderYapMode()}
 
       {/* Background Gradients */}
       <LinearGradient
@@ -670,7 +677,15 @@ export default function Chatbot() {
       />
 
       {mode === "idle" && (
-        <FooterCTA setMode={setMode} disabled={showSlider || showSelectedValue} />
+        <FooterCTA 
+          setMode={setMode} 
+          disabled={showSlider || showSelectedValue}
+          isRecording={isRecording}
+          recordingComplete={recordingComplete}
+          onStartRecording={startRecording}
+          onStopRecording={stopRecording}
+          onSendRecording={sendRecording}
+        />
       )}
     </View>
   );
@@ -680,8 +695,8 @@ export default function Chatbot() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      <StatusBar style="dark" />
+    <SafeAreaView style={styles.container} edges={isAndroid ? ["top", "left", "right"] : ["top"]}>
+      <StatusBar style="dark" backgroundColor={isAndroid ? COLORS.white : undefined} />
       {mode === "type" ? (
         <KeyboardAvoidingView
           style={styles.kav}
@@ -702,14 +717,23 @@ const styles = StyleSheet.create({
   // Layout
   container: {
     flex: 1,
-    backgroundColor: COLORS.white,
+    backgroundColor: isAndroid ? COLORS.surface : COLORS.white,
+    ...(isAndroid && {
+      minHeight: screenHeight,
+    }),
   },
   kav: {
     flex: 1,
   },
   root: {
     flex: 1,
-    paddingHorizontal: 15,
+    paddingHorizontal: Math.max(15, 15 * scaleWidth),
+    width: '100%',
+    maxWidth: screenWidth,
+  },
+  rootIdle: {
+    overflow: 'hidden', // Prevent any scrolling in idle mode
+    height: screenHeight, // Fixed height to prevent vertical scroll
   },
 
   // Background gradients
@@ -718,26 +742,39 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: 200,
+    height: isAndroid ? Math.max(250, screenHeight * 0.3) : 200,
     zIndex: -1,
+    ...(isAndroid && {
+      top: 0,
+      height: screenHeight,
+    }),
   },
   gradientFade: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    height: 200,
+    height: isAndroid ? Math.max(250, screenHeight * 0.3) : 200,
     zIndex: -1,
+    ...(isAndroid && {
+      top: 0,
+      height: screenHeight,
+    }),
   },
 
   // Chat interface
   messagesContainer: {
     flex: 1,
     marginTop: -50,
+    width: '100%',
   },
   scrollContent: {
     paddingTop: 60,
-    paddingBottom: 20,
+    paddingBottom: Math.max(20, 20 * scaleHeight),
+    flexGrow: 1,
+    ...(isAndroid && {
+      paddingBottom: Math.max(40, 40 * scaleHeight),
+    }),
   },
   messagesWrapper: {
     paddingTop: 20,
@@ -747,9 +784,9 @@ const styles = StyleSheet.create({
   botMessageContainer: {
     flexDirection: 'row',
     justifyContent: 'flex-start',
-    marginBottom: 15,
-    // paddingLeft: 15,
+    marginBottom: Math.max(15, 15 * scaleHeight),
     zIndex: 1,
+    width: '100%',
   },
   botMessageBubble: {
     maxWidth: '80%',
@@ -758,20 +795,33 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 0,
     borderWidth: 1,
     borderColor: COLORS.outlineVariant,
-    paddingHorizontal: 15,
-    paddingVertical: 12,
+    paddingHorizontal: Math.max(15, 15 * scaleWidth),
+    paddingVertical: Math.max(12, 12 * scaleHeight),
+    flexShrink: 1,
+    ...(isAndroid && {
+      elevation: 1,
+      shadowColor: COLORS.outlineVariant,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 1,
+    }),
   },
   botMessageText: {
-    fontSize: 16,
-    lineHeight: 20,
+    fontSize: Math.max(16, 16 * scale),
+    lineHeight: Math.max(20, 20 * scale),
     fontFamily: FONT_FAMILIES['Inter-Regular'],
+    includeFontPadding: isAndroid ? false : undefined,
+    textAlignVertical: isAndroid ? 'center' : undefined,
+    flex: 1,
+    flexWrap: 'wrap',
   },
   userMessageContainer: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    marginBottom: 15,
-    paddingRight: 15,
+    marginBottom: Math.max(15, 15 * scaleHeight),
+    paddingRight: Math.max(15, 15 * scaleWidth),
     zIndex: 1,
+    width: '100%',
   },
   userMessageBubble: {
     maxWidth: '80%',
@@ -780,55 +830,105 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 0,
     borderColor: COLORS.outlineVariant,
     borderRadius: 15,
-    paddingHorizontal: 15,
-    paddingVertical: 12,
+    paddingHorizontal: Math.max(15, 15 * scaleWidth),
+    paddingVertical: Math.max(12, 12 * scaleHeight),
+    flexShrink: 1,
+    ...(isAndroid && {
+      elevation: 1,
+      shadowColor: COLORS.outlineVariant,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 1,
+    }),
   },
   userMessageText: {
-    fontSize: 16,
-    lineHeight: 20,
+    fontSize: Math.max(16, 16 * scale),
+    lineHeight: Math.max(20, 20 * scale),
     fontFamily: FONT_FAMILIES['Inter-Regular'],
     color: COLORS.onSurface,
+    includeFontPadding: isAndroid ? false : undefined,
+    textAlignVertical: isAndroid ? 'center' : undefined,
+    flex: 1,
+    flexWrap: 'wrap',
+  },
+  recordingStatusContainer: {
+    alignItems: 'center',
+    paddingVertical: Math.max(10, 10 * scaleHeight),
+    paddingHorizontal: Math.max(15, 15 * scaleWidth),
+  },
+  recordingStatusText: {
+    fontSize: Math.max(14, 14 * scale),
+    fontFamily: FONT_FAMILIES['Inter-Regular'],
+    color: COLORS.greyMedium,
+    textAlign: 'center',
+    includeFontPadding: isAndroid ? false : undefined,
+    textAlignVertical: isAndroid ? 'center' : undefined,
   },
 
   // Input
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    paddingVertical: 15,
-    paddingHorizontal: 15,
-    marginBottom: 25,
+    paddingVertical: Math.max(15, 15 * scaleHeight),
+    paddingHorizontal: Math.max(15, 15 * scaleWidth),
+    marginBottom: Math.max(25, 25 * scaleHeight),
+    width: '100%',
   },
   inputField: {
     flex: 1,
     backgroundColor: COLORS.white,
     borderRadius: 10,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    marginRight: 10,
-    maxHeight: 100,
+    paddingHorizontal: Math.max(20, 20 * scaleWidth),
+    paddingVertical: Math.max(12, 12 * scaleHeight),
+    marginRight: Math.max(10, 10 * scaleWidth),
+    minHeight: Math.max(50, 50 * scaleHeight),
+    maxHeight: Math.max(150, 150 * scaleHeight),
     borderWidth: 1,
     borderColor: COLORS.outlineVariant,
+    ...(isAndroid && {
+      elevation: 1,
+      shadowColor: COLORS.outlineVariant,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 1,
+    }),
   },
   textInput: {
-    fontSize: 14,
+    fontSize: Math.max(14, 14 * scale),
     color: COLORS.onSurface,
-    minHeight: 20,
+    minHeight: Math.max(20, 20 * scale),
+    maxHeight: Math.max(120, 120 * scaleHeight), // Allow multiline expansion
+    includeFontPadding: isAndroid ? false : undefined,
+    textAlignVertical: isAndroid ? 'top' : undefined, // Better for multiline
+    flexWrap: 'wrap',
+    textAlign: 'left',
   },
 
   // Buttons
   whiteButton: {
-    width: 55,
-    height: 55,
+    width: Math.max(55, 55 * scale),
+    height: Math.max(55, 55 * scale),
     backgroundColor: COLORS.white,
     borderRadius: 50,
-    marginRight: 10,
+    marginRight: Math.max(10, 10 * scaleWidth),
     alignItems: 'center',
     justifyContent: 'center',
+    minWidth: 44, // Minimum touch target
+    minHeight: 44,
+    ...(isAndroid && {
+      elevation: 2,
+      shadowColor: COLORS.outlineVariant,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+    }),
   },
   sendButton: {
-    width: 45,
-    height: 45,
-    borderRadius: 22.5,
+    width: Math.max(45, 45 * scale),
+    height: Math.max(45, 45 * scale),
+    borderRadius: Math.max(22.5, 22.5 * scale),
+    minWidth: 44,
+    minHeight: 44,
   },
   buttonGradient: {
     width: '100%',
@@ -853,34 +953,43 @@ const styles = StyleSheet.create({
 
   // Choice options
   choiceOptionsContainer: {
-    paddingHorizontal: 15,
-    paddingVertical: 20,
+    paddingHorizontal: Math.max(15, 15 * scaleWidth),
+    paddingVertical: Math.max(20, 20 * scaleHeight),
+    width: '100%',
   },
   choiceOptionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
-    gap: 5,
-    paddingBottom: 10, // Add bottom padding for better spacing
+    gap: Math.max(5, 5 * scale),
+    paddingBottom: Math.max(10, 10 * scaleHeight),
+    width: '100%',
   },
   choiceButton: {
     width: 'auto',
-    marginBottom: 5,
+    marginBottom: Math.max(5, 5 * scale),
     borderRadius: 20,
     overflow: 'hidden',
-    // minHeight: 44, // Consistent height for both states
+    minHeight: 44, // Consistent height for both states
+    ...(isAndroid && {
+      elevation: 1,
+      shadowColor: COLORS.outlineVariant,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 1,
+    }),
   },
   choiceButtonSelected: {
     // Additional styles for selected state if needed
   },
   choiceButtonGradient: {
-    paddingHorizontal: 15,
-    paddingVertical: 12, // Same padding as unselected
+    paddingHorizontal: Math.max(15, 15 * scaleWidth),
+    paddingVertical: Math.max(12, 12 * scaleHeight),
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 44, // Same height as unselected
-    flex: 1, // Take full available space
-    width: '100%', // Ensure full width
+    minHeight: 44,
+    flex: 1,
+    width: '100%',
   },
   choiceButtonTextContainer: {
     flex: 1,
@@ -889,30 +998,29 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   choiceButtonText: {
-    fontSize: 14,
+    fontSize: Math.max(14, 14 * scale),
     fontFamily: FONT_FAMILIES['Inter-Regular'],
     fontWeight: '400',
     color: COLORS.white,
     textAlign: 'center',
-    lineHeight: 18, // Same line height as unselected
-    includeFontPadding: false, // Remove extra font padding
+    lineHeight: Math.max(18, 18 * scale),
+    includeFontPadding: isAndroid ? false : undefined,
+    textAlignVertical: isAndroid ? 'center' : undefined,
   },
   choiceButtonTextUnselected: {
-    fontSize: 14,
+    fontSize: Math.max(14, 14 * scale),
     fontFamily: FONT_FAMILIES['Inter-Regular'],
     fontWeight: '400',
     color: COLORS.onSurface,
     textAlign: 'center',
-    paddingHorizontal: 15,
-    paddingVertical: 12, // Same padding as selected
+    paddingHorizontal: Math.max(15, 15 * scaleWidth),
+    paddingVertical: Math.max(12, 12 * scaleHeight),
     backgroundColor: '#FDF4F8',
     borderRadius: 20,
-    // borderWidth: 1,
-    // borderColor: COLORS.outlineVariant,
-    minHeight: 44, // Same height as selected
-    lineHeight: 18, // Same line height as selected
-    includeFontPadding: false, // Remove extra font padding
-    textAlignVertical: 'center', // Center text vertically
+    minHeight: 44,
+    lineHeight: Math.max(18, 18 * scale),
+    includeFontPadding: isAndroid ? false : undefined,
+    textAlignVertical: isAndroid ? 'center' : undefined,
   },
   sendButtonDisabled: {
     opacity: 0.5,
@@ -921,11 +1029,12 @@ const styles = StyleSheet.create({
   // CTA wrapper
   CTAWrapper: {
     flexDirection: 'row',
-    paddingVertical: 15,
-    paddingHorizontal: 15,
-    marginBottom: 25,
+    paddingVertical: Math.max(15, 15 * scaleHeight),
+    paddingHorizontal: Math.max(15, 15 * scaleWidth),
+    marginBottom: Math.max(25, 25 * scaleHeight),
     justifyContent: 'space-between',
     alignItems: 'center',
+    width: '100%',
   },
   CTAGroup1: {
     flexDirection: 'row',
@@ -934,47 +1043,55 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   btnLabel: {
-    marginTop: 9,
+    marginTop: Math.max(9, 9 * scale),
     color: COLORS.onSurface,
-    fontSize: 14,
+    fontSize: Math.max(14, 14 * scale),
     fontFamily: FONT_FAMILIES['Inter-Regular'],
+    includeFontPadding: isAndroid ? false : undefined,
+    textAlignVertical: isAndroid ? 'center' : undefined,
   },
 
   // Yap mode styles
   yapContainer: {
     justifyContent: 'center',
     alignItems: 'center',
+    width: '100%',
   },
   statusContainer: {
     // marginVertical: 20,
   },
   statusText: {
-    fontSize: 16,
+    fontSize: Math.max(16, 16 * scale),
     fontFamily: FONT_FAMILIES['Inter-Regular'],
     color: COLORS.greyMedium,
     textAlign: 'center',
+    includeFontPadding: isAndroid ? false : undefined,
+    textAlignVertical: isAndroid ? 'center' : undefined,
   },
   timerContainer: {
     // marginVertical: 40,
   },
   timerText: {
-    fontSize: 16,
+    fontSize: Math.max(16, 16 * scale),
     fontFamily: FONT_FAMILIES['Inter-Regular'],
     color: COLORS.onSurface,
     textAlign: 'center',
+    includeFontPadding: isAndroid ? false : undefined,
+    textAlignVertical: isAndroid ? 'center' : undefined,
   },
   yapSendButtonContainer: {
     alignItems: 'center',
-    marginTop: 10,
-    paddingVertical: 15,
-    paddingHorizontal: 15,
-    marginBottom: 25,
+    marginTop: Math.max(10, 10 * scale),
+    paddingVertical: Math.max(15, 15 * scaleHeight),
+    paddingHorizontal: Math.max(15, 15 * scaleWidth),
+    marginBottom: Math.max(25, 25 * scaleHeight),
+    width: '100%',
   },
   yapSendButton: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginBottom: 10,
+    width: Math.max(80, 80 * scale),
+    height: Math.max(80, 80 * scale),
+    borderRadius: Math.max(40, 40 * scale),
+    marginBottom: Math.max(10, 10 * scale),
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -982,75 +1099,139 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.15,
     shadowRadius: 8,
-    elevation: 8, // For Android shadow
+    elevation: isAndroid ? 8 : 0,
+    minWidth: 80,
+    minHeight: 80,
   },
   yapSendButtonGradient: {
     width: '100%',
     height: '100%',
-    borderRadius: 40,
+    borderRadius: Math.max(40, 40 * scale),
     justifyContent: 'center',
     alignItems: 'center',
   },
   yapSendButtonLabel: {
-    fontSize: 16,
+    fontSize: Math.max(16, 16 * scale),
     fontFamily: FONT_FAMILIES['Inter-Regular'],
     color: COLORS.onSurface,
     textAlign: 'center',
+    includeFontPadding: isAndroid ? false : undefined,
+    textAlignVertical: isAndroid ? 'center' : undefined,
+  },
+
+  // Idle mode container
+  idleModeContainer: {
+    flex: 1,
+    width: '100%',
+    backgroundColor: 'transparent',
+    overflow: 'hidden', // Prevent scrolling
+    maxHeight: screenHeight - 100, // Account for header and footer
+  },
+  sliderPageContainer: {
+    flex: 1,
+    width: '100%',
+    justifyContent: 'center',
+    // alignItems: 'center',
+    backgroundColor: 'transparent',
+    overflow: 'hidden', // Prevent scrolling
+    maxHeight: screenHeight - 150, // Account for header and footer
+  },
+  sliderTopSpacer: {
+    flex: 1,
+    minHeight: Math.max(50, 50 * scaleHeight),
+  },
+  sliderBottomSpacer: {
+    flex: 1,
+    minHeight: Math.max(50, 50 * scaleHeight),
   },
 
   // Slider styles
   sliderContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 30,
+    paddingLeft: Math.max(20, 20 * scaleWidth),
+    paddingVertical: Math.max(30, 30 * scaleHeight),
+    width: '100%',
+    maxWidth: screenWidth - 40, // Ensure it doesn't exceed screen width
+    alignItems: 'center',
+    overflow: 'hidden', // Prevent horizontal overflow
   },
   sliderNumbers: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 15,
+    marginBottom: Math.max(15, 15 * scale),
+    width: '100%',
+    maxWidth: screenWidth - 80, // Account for container padding
+    paddingHorizontal: 0,
+    flexWrap: 'nowrap',
+    overflow: 'hidden', // Prevent horizontal overflow
   },
   sliderNumber: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    marginRight: 2,
+    width: Math.max(32, Math.min(36, (screenWidth - 100) / 9)), // Responsive width based on screen
+    height: Math.max(32, Math.min(36, (screenWidth - 100) / 9)), // Responsive height
+    borderRadius: Math.max(8, 8 * scale),
+    marginRight: Math.max(1, 1 * scale),
     borderColor: COLORS.outlineVariant,
     justifyContent: 'center',
     alignItems: 'center',
+    minWidth: 32,
+    minHeight: 32,
+    flex: 1,
+    maxWidth: (screenWidth - 100) / 9,
+    ...(isAndroid && {
+      elevation: 1,
+      shadowColor: COLORS.outlineVariant,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 1,
+    }),
   },
   sliderNumberSelected: {
     borderColor: COLORS.onPrimaryContainer,
     borderWidth: 2,
   },
   sliderNumberText: {
-    fontSize: 16,
+    fontSize: Math.max(16, 16 * scale),
     fontFamily: FONT_FAMILIES['Inter-Regular'],
     color: COLORS.onSurface,
+    includeFontPadding: isAndroid ? false : undefined,
+    textAlignVertical: isAndroid ? 'center' : undefined,
   },
   sliderLabels: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 6,
+    paddingHorizontal: Math.max(6, 6 * scale),
+    width: '100%',
+    maxWidth: screenWidth - 80, // Account for container padding
+    flexWrap: 'nowrap',
+    overflow: 'hidden', // Prevent horizontal overflow
   },
   sliderLabel: {
-    fontSize: 11,
+    fontSize: Math.max(10, Math.min(11, 11 * scale)),
     fontFamily: FONT_FAMILIES['Inter-Regular'],
     color: COLORS.greyMedium,
     textAlign: 'center',
+    includeFontPadding: isAndroid ? false : undefined,
+    textAlignVertical: isAndroid ? 'center' : undefined,
+    flex: 1,
+    maxWidth: (screenWidth - 100) / 5, // 5 labels
   },
   selectedValueContainer: {
     alignItems: 'center',
-    paddingVertical: 20,
+    paddingVertical: Math.max(20, 20 * scaleHeight),
   },
   selectedValueNumber: {
-    fontSize: 48,
+    fontSize: Math.max(48, 48 * scale),
     fontFamily: FONT_FAMILIES['Inter-Regular'],
     color: COLORS.onSurface,
     fontWeight: 'bold',
+    includeFontPadding: isAndroid ? false : undefined,
+    textAlignVertical: isAndroid ? 'center' : undefined,
   },
   selectedValueLabel: {
-    fontSize: 18,
+    fontSize: Math.max(18, 18 * scale),
     fontFamily: FONT_FAMILIES['Inter-Regular'],
     color: COLORS.greyMedium,
-    marginTop: 5,
+    marginTop: Math.max(5, 5 * scale),
+    includeFontPadding: isAndroid ? false : undefined,
+    textAlignVertical: isAndroid ? 'center' : undefined,
   },
 });
