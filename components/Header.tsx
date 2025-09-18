@@ -1,11 +1,18 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { scale, verticalScale } from 'react-native-size-matters';
 import { FONT_FAMILIES } from '../lib/fonts';
 
 // Responsive dimensions
-const { width: screenWidth } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const isAndroid = Platform.OS === 'android';
-const scaleWidth = screenWidth / 375; // Base width from design
+const isIOS = Platform.OS === 'ios';
+
+// Font scaling system using react-native-size-matters
+const FONT_SIZES = {
+  // From Figma: Header text (14px Noto Serif) - "Weekly Check-in"
+  header: scale(14),
+};
 
 
 const COLORS = {
@@ -36,9 +43,9 @@ export default function Header({ onClose }: HeaderProps) {
               style={styles.closeBtn}
               onPress={onClose}
               activeOpacity={0.7}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              hitSlop={{ top: verticalScale(10), bottom: verticalScale(10), left: scale(10), right: scale(10) }}
             >
-              <Ionicons name="close-outline" size={Math.max(32, 32 * scaleWidth)} color={COLORS.greyMedium} />
+              <Ionicons name="close-outline" size={scale(32)} color={COLORS.greyMedium} />
             </TouchableOpacity>
             <View style={styles.headerCenter}>
               <Text style={styles.headerTitle}>Weekly Check-in</Text>
@@ -51,7 +58,7 @@ export default function Header({ onClose }: HeaderProps) {
 
 const styles = StyleSheet.create({
     header:{
-    height: Math.max(52, 52 * scaleWidth),
+    height: verticalScale(52),
     justifyContent: "center",
     zIndex: 1000,
     backgroundColor: COLORS.white,
@@ -61,17 +68,17 @@ const styles = StyleSheet.create({
   },
   closeBtn:
   {
-    width: Math.max(36, 36 * scaleWidth), 
-    height: Math.max(36, 36 * scaleWidth), 
+    width: scale(36), 
+    height: scale(36), 
     alignItems: "center", 
     justifyContent: "center", 
-    borderRadius: Math.max(18, 18 * scaleWidth),
-    minWidth: 44, // Minimum touch target for accessibility
-    minHeight: 44,
+    borderRadius: scale(18),
+    minWidth: scale(44), // Minimum touch target for accessibility
+    minHeight: scale(44),
     ...(isAndroid && {
       elevation: 1,
       shadowColor: COLORS.outlineVariant,
-      shadowOffset: { width: 0, height: 1 },
+      shadowOffset: { width: 0, height: verticalScale(1) },
       shadowOpacity: 0.1,
       shadowRadius: 1,
     }),
@@ -84,10 +91,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: '100%',
   },
-  headerTitle:
-  {
+  headerTitle: {
     color: COLORS.onSurface,
-    fontSize: Math.max(16, 16 * scaleWidth),
+    fontSize: FONT_SIZES.header,
     fontWeight: "400",
     fontFamily: FONT_FAMILIES['NotoSerif-Regular'],
     includeFontPadding: isAndroid ? false : undefined,

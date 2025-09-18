@@ -1,7 +1,26 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { Image, Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Dimensions, Image, Platform, Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { scale, verticalScale } from 'react-native-size-matters';
 import { FONT_FAMILIES } from '../lib/fonts';
+
+// Responsive dimensions
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const isAndroid = Platform.OS === 'android';
+const isIOS = Platform.OS === 'ios';
+
+// Font scaling system using react-native-size-matters
+const FONT_SIZES = {
+  // From Figma: Button text (12px Inter Regular) - for "tap", "yap", "type" labels
+  button: scale(12),
+  
+  // From Figma: Message text (14px Inter Regular)
+  message: scale(14),
+  
+  // Additional sizes for UI elements
+  caption: scale(10),
+  small: scale(11),
+};
 
 
 const COLORS = {
@@ -64,7 +83,12 @@ export default function FooterCTA({
                                 colors={[COLORS.gradPurple, COLORS.gradPink]}
                                 style={styles.btn80Gradient}
                             >
-                                <Ionicons name="mic" size={30} color={COLORS.white} />
+                                <Image
+                                source={require("../assets/images/yap-icon-white.png")} // local image
+                                style={{ width: scale(50), height: scale(50) }}
+                                resizeMode="contain"
+                            />
+                                {/* <Ionicons name="mic" size={30} color={COLORS.white} /> */}
                             </LinearGradient>
                         </Pressable>
                     ) : !disabled && recordingComplete ? (
@@ -84,7 +108,7 @@ export default function FooterCTA({
                         >
                             <Image
                                 source={require("../assets/images/yap-icon.png")} // local image
-                                style={{ width: 50, height: 50 }}
+                                style={{ width: scale(50), height: scale(50) }}
                                 resizeMode="contain"
                             />
                         </Pressable>
@@ -92,7 +116,7 @@ export default function FooterCTA({
                         <TouchableOpacity style={styles.btn80} disabled={disabled} onPress={() => setMode("idle")}>
                             <Image
                                 source={require("../assets/images/yap-icon.png")} // local image
-                                style={{ width: 50, height: 50 }}
+                                style={{ width: scale(50), height: scale(50) }}
                                 resizeMode="contain"
                             />
                         </TouchableOpacity>
@@ -120,7 +144,7 @@ const shadowStrong = {
     shadowColor: "#000",
     shadowOpacity: 0.18,
     shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
+    shadowOffset: { width: 0, height: verticalScale(6) },
     elevation: 8,
   };
   
@@ -128,7 +152,7 @@ const shadowStrong = {
     shadowColor: "#000",
     shadowOpacity: 0.12,
     shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: { width: 0, height: verticalScale(3) },
     elevation: 4,
   };
 const styles = StyleSheet.create({
@@ -137,16 +161,16 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "flex-end",
         justifyContent: "space-between",
-        paddingHorizontal: 50,
-        paddingBottom: 40
+        paddingHorizontal: scale(50),
+        paddingBottom: verticalScale(40)
     },
     btn55Container: {
         alignItems: "center",
-        width: 55
+        width: scale(55)
     },
     btn50: {
-        width: 55,
-        height: 55,
+        width: scale(55),
+        height: scale(55),
         borderRadius: "50%",
         backgroundColor: COLORS.white,
         alignItems: "center",
@@ -154,22 +178,25 @@ const styles = StyleSheet.create({
     },
 
     btnLabel: {
-        marginTop: 9,
+        marginTop: verticalScale(9),
         color: COLORS.onSurface,
-        fontSize: 14,
-        fontFamily: FONT_FAMILIES['Inter-Regular']
+        fontSize: FONT_SIZES.button,
+        fontFamily: FONT_FAMILIES['Inter-Regular'],
+        textAlign: 'center',
+        includeFontPadding: isAndroid ? false : undefined,
+        textAlignVertical: isAndroid ? 'center' : undefined,
     },
 
     btn80Container:
     {
         alignItems: "center",
-        width: 80
+        width: scale(80)
     },
     btn80:
     {
-        width: 90,
-        height: 90,
-        borderRadius: 70,
+        width: scale(90),
+        height: scale(90),
+        borderRadius: scale(70),
         backgroundColor: COLORS.white,
         alignItems: "center",
         justifyContent: "center", ...shadowStrong
@@ -177,12 +204,18 @@ const styles = StyleSheet.create({
     btn80Gradient: {
         width: '100%',
         height: '100%',
-        borderRadius: 70,
+        borderRadius: scale(70),
         alignItems: "center",
         justifyContent: "center",
     },
-    btnLabelCenter:
-    {
-        marginTop: 9, color: COLORS.onSurface, fontSize: 14, textAlign: "center", width: 80, fontFamily: "Inter"
+    btnLabelCenter: {
+        marginTop: verticalScale(9),
+        color: COLORS.onSurface,
+        fontSize: FONT_SIZES.button,
+        textAlign: "center",
+        width: scale(80),
+        fontFamily: FONT_FAMILIES['Inter-Regular'],
+        includeFontPadding: isAndroid ? false : undefined,
+        textAlignVertical: isAndroid ? 'center' : undefined,
     },
 })

@@ -6,6 +6,7 @@ import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
 import { Dimensions, Image, ImageBackground, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
 import { FONT_FAMILIES, useAppFonts } from '../../lib/fonts';
 
 // Constants from Figma design
@@ -18,10 +19,8 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const isAndroid = Platform.OS === 'android';
 const isIOS = Platform.OS === 'ios';
 
-// Responsive scaling factors
-const scaleWidth = screenWidth / 375; // Base width from design
-const scaleHeight = screenHeight / 812; // Base height from design
-const scale = Math.min(scaleWidth, scaleHeight);
+// Responsive scaling using react-native-size-matters
+// No need for manual scaling factors
 
 // Gradient Text Component
 function GradientText({ children, style }: { children: string; style?: any }) {
@@ -29,7 +28,7 @@ function GradientText({ children, style }: { children: string; style?: any }) {
     <MaskedView
       style={{ 
         flexDirection: 'row', 
-        height: Math.round(Math.max(20, (style?.lineHeight || 20) * scale)),
+        height: Math.round(verticalScale(style?.lineHeight || 20)),
         ...(isAndroid && { 
           renderToHardwareTextureAndroid: true,
           needsOffscreenAlphaCompositing: true 
@@ -404,13 +403,13 @@ const milestones: Milestone[] = [
                      resizeMode="contain"
                    />
                  </View>
-            <View style={[styles.labsTag, { top: 0, left: 0 }]}>
+            <View style={[styles.labsTag, { top: scale(0), left: scale(0) }]}>
               <Text style={styles.labsTagText}>DHEA</Text>
             </View>
-            <View style={[styles.labsTag, { top: 64, left: 10 }]}>
+            <View style={[styles.labsTag, { top: scale(64), left: scale(10) }]}>
               <Text style={styles.labsTagText}>TSH</Text>
             </View>
-            <View style={[styles.labsTag, { top: 18, left: 70 }]}>
+            <View style={[styles.labsTag, { top: scale(18), left: scale(70) }]}>
               <Text style={styles.labsTagText}>T3</Text>
             </View>
           </View>
@@ -667,8 +666,8 @@ const milestones: Milestone[] = [
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={isAndroid ? ["top", "left", "right"] : ["top"]}>
-      <StatusBar style="dark" backgroundColor={isAndroid ? COLORS.background : undefined} />
+    <SafeAreaView style={styles.container} edges={isAndroid ? ["top", "left", "right"] : []}>
+      <StatusBar style="dark" backgroundColor={isAndroid ? COLORS.background : COLORS.background} />
       <ScrollView 
         style={styles.scrollView} 
         showsVerticalScrollIndicator={false}
@@ -710,14 +709,14 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: isAndroid ? 20 : 0,
+    paddingBottom: isAndroid ? verticalScale(20) : 0,
   },
   labsSection: {
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
-    paddingTop: isAndroid ? 25 : 30,
-    paddingHorizontal: Math.max(20, screenWidth * 0.053), // 5.3% of screen width
-    paddingBottom: 20,
+    paddingTop: isAndroid ? verticalScale(25) : verticalScale(30),
+    paddingHorizontal: scale(20), // Responsive horizontal padding
+    paddingBottom: verticalScale(20),
     position: 'relative',
     overflow: 'hidden',
     minHeight: isAndroid ? 200 : undefined,
@@ -727,82 +726,84 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-start',
-    marginBottom: isAndroid ? 25 : 30,
+    marginBottom: isAndroid ? verticalScale(25) : verticalScale(30),
     zIndex: 1,
+    paddingTop: verticalScale(30)
   },
   labsTitleAligned: {
-    fontSize: Math.max(14, 14 * scale),
+    fontSize: moderateScale(14),
     fontWeight: '500',
     color: COLORS.black,
     fontFamily: FONT_FAMILIES['NotoSerif-Regular'],
-    lineHeight: Math.max(21, 21 * scale),
+    lineHeight: moderateScale(21),
     position: 'absolute',
-    left: Math.max(126, 126 * scaleWidth), // Responsive positioning
+    left: scale(126), // Responsive positioning
+    top: verticalScale(40),
     includeFontPadding: isAndroid ? false : undefined,
     textAlignVertical: isAndroid ? 'center' : undefined,
   },
   backButton: {
-    width: Math.max(36, 36 * scale),
-    height: Math.max(36, 36 * scale),
+    width: scale(36),
+    height: scale(36),
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'transparent',
-    minWidth: 44, // Minimum touch target for accessibility
-    minHeight: 44,
+    minWidth: scale(44), // Minimum touch target for accessibility
+    minHeight: scale(44),
   },
   labsTitle: {
-    fontSize: 14,
+    fontSize: moderateScale(14),
     fontWeight: '500',
     color: COLORS.black,
     fontFamily: FONT_FAMILIES['NotoSerif-Regular'],
-    lineHeight: 21,
+    lineHeight: moderateScale(21),
     letterSpacing: 0,
     textAlign: 'center',
   },
   placeholder: {
-    width: 36,
+    width: scale(36),
   },
   labsContent: {
-    marginBottom: 20,
+    marginBottom: verticalScale(20),
     zIndex: 1,
   },
   labsCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Math.max(16, 16 * scaleWidth),
+    gap: scale(16),
   },
   labsIconContainer: {
-    width: Math.max(110, 110 * scaleWidth),
-    height: Math.max(77, 77 * scaleHeight),
+    width: scale(110),
+    height: verticalScale(77),
     position: 'relative',
   },
   labsIcon: {
-    width: Math.max(80, 80 * scale),
-    height: Math.max(80, 80 * scale),
+    width: scale(80),
+    height: scale(80),
     backgroundColor: COLORS.white,
-    borderRadius: 97,
+    borderRadius: scale(97),
     alignItems: 'center',
     justifyContent: 'center',
     ...(isAndroid && {
       elevation: 2,
       shadowColor: COLORS.shadow,
-      shadowOffset: { width: 0, height: 1 },
+      shadowOffset: { width: 0, height: verticalScale(1) },
       shadowOpacity: 0.1,
       shadowRadius: 2,
     }),
   },
   bloodReportIcon: {
-    width: Math.max(80, 80 * scale),
-    height: Math.max(80, 80 * scale),
+    width: scale(80),
+    height: scale(80),
   },
   labsTag: {
     position: 'absolute',
     backgroundColor: COLORS.white,
-    paddingHorizontal: Math.max(8, 8 * scale),
-    paddingVertical: Math.max(3, 3 * scale),
-    borderRadius: 40,
+    paddingHorizontal: scale(8),
+    paddingVertical: moderateScale(3),
+    borderRadius: scale(40),
     shadowColor: COLORS.shadowDark,
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: { width: 0, height: verticalScale(3) },
     shadowOpacity: 0.45,
     shadowRadius: 3,
     ...(isAndroid && {
@@ -810,7 +811,7 @@ const styles = StyleSheet.create({
     }),
   },
   labsTagText: {
-    fontSize: Math.max(10, 10 * scale),
+    fontSize: moderateScale(10),
     color: COLORS.warmPurple,
     fontFamily: FONT_FAMILIES['Inter-Regular'],
     includeFontPadding: isAndroid ? false : undefined,
@@ -818,55 +819,55 @@ const styles = StyleSheet.create({
   },
   labsTextContainer: {
     flex: 1,
-    gap: Math.max(8, 8 * scale),
+    gap: scale(8),
   },
   labsTitleText: {
-    fontSize: Math.max(14, 14 * scale),
+    fontSize: moderateScale(14),
     fontWeight: '500',
     color: COLORS.black,
     fontFamily: FONT_FAMILIES['NotoSerif-Regular'],
-    lineHeight: Math.max(21, 21 * scale),
+    lineHeight: moderateScale(21),
     includeFontPadding: isAndroid ? false : undefined,
     textAlignVertical: isAndroid ? 'center' : undefined,
   },
   labsDescriptionText: {
-    fontSize: Math.max(12, 12 * scale),
+    fontSize: moderateScale(12),
     color: COLORS.greyMedium,
     fontFamily: FONT_FAMILIES['Inter-Regular'],
-    lineHeight: Math.max(15, 15 * scale),
+    lineHeight: moderateScale(15),
     includeFontPadding: isAndroid ? false : undefined,
     textAlignVertical: isAndroid ? 'center' : undefined,
   },
   uploadButtonContainer: {
-    paddingHorizontal: 0,
+    paddingHorizontal: scale(0),
     zIndex: 1,
-    marginTop: 10,
-    marginBottom: 15,
+    marginTop: verticalScale(10),
+    marginBottom: verticalScale(15),
 
   },
   uploadButton: {
     backgroundColor: COLORS.white,
-    borderRadius: 100,
+    borderRadius: scale(100),
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: verticalScale(4) },
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: isAndroid ? 5 : 0,
     borderWidth: 0,
-    minHeight: 48,
+    minHeight: verticalScale(48),
   },
   uploadButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: Math.max(11, 11 * scale),
-    paddingHorizontal: Math.max(35, 35 * scaleWidth),
-    gap: Math.max(3, 3 * scale),
-    height: Math.max(48, 48 * scale),
-    minHeight: 48,
+    paddingVertical: moderateScale(11),
+    paddingHorizontal: scale(35),
+    gap: moderateScale(3),
+    height: verticalScale(48),
+    minHeight: verticalScale(48),
   },
   uploadButtonText: {
-    fontSize: Math.max(14, 14 * scale),
+    fontSize: moderateScale(14),
     fontWeight: '500',
     color: COLORS.black,
     fontFamily: FONT_FAMILIES['Inter-Medium'],
@@ -875,8 +876,8 @@ const styles = StyleSheet.create({
     textAlignVertical: isAndroid ? 'center' : undefined,
   },
   streakSection: {
-    marginBottom: Math.max(20, 20 * scaleHeight),
-    gap: Math.max(30, 30 * scaleHeight),
+    marginBottom: verticalScale(20),
+    gap: verticalScale(30),
     position: 'relative',
     overflow: 'hidden',
     backgroundColor: COLORS.white,
@@ -896,14 +897,14 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   streakTitle: {
-    fontSize: Math.max(14, 14 * scale),
+    fontSize: moderateScale(14),
     fontWeight: '500',
     color: COLORS.black,
     textAlign: 'center',
     fontFamily: FONT_FAMILIES['NotoSerif-Regular'],
-    lineHeight: Math.max(21, 21 * scale),
-    marginBottom: Math.max(50, 50 * scaleHeight),
-    marginTop: Math.max(40, 40 * scaleHeight),
+    lineHeight: moderateScale(21),
+    marginBottom: verticalScale(50),
+    marginTop: verticalScale(40),
     width: '100%',
     includeFontPadding: isAndroid ? false : undefined,
     textAlignVertical: isAndroid ? 'center' : undefined,
@@ -914,55 +915,55 @@ const styles = StyleSheet.create({
   streakNumberGradient: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 10,
+    paddingHorizontal: scale(10),
   },
   streakTextContainer: {
     alignItems: 'center',
     // gap: 2,
     backgroundColor: COLORS.white,
-    paddingHorizontal: 15,
-    paddingTop: 10,
+    paddingHorizontal: scale(15),
+    paddingTop: verticalScale(10),
   },
   streakNumber: {
-    fontSize: Math.max(80, 80 * scale),
+    fontSize: moderateScale(80),
     fontWeight: '700',
     fontFamily: FONT_FAMILIES['NotoSerif-Regular'],
-    lineHeight: Math.max(100, 100 * scale),
+    lineHeight: moderateScale(100),
     textAlign: 'center',  
     verticalAlign: 'middle',
     includeFontPadding: isAndroid ? false : undefined,
     textAlignVertical: isAndroid ? 'center' : undefined,
   },
   streakLabel: {
-    fontSize: Math.max(12, 12 * scale),
+    fontSize: moderateScale(12),
     color: COLORS.black,
     fontFamily: FONT_FAMILIES['NotoSerif-Regular'],
-    lineHeight: Math.max(18, 18 * scale),
+    lineHeight: moderateScale(18),
     backgroundColor: COLORS.white,
-    paddingHorizontal: Math.max(30, 30 * scaleWidth),
-    paddingTop: Math.max(8, 8 * scale),
+    paddingHorizontal: scale(30),
+    paddingTop: scale(8),
     includeFontPadding: isAndroid ? false : undefined,
     textAlignVertical: isAndroid ? 'center' : undefined,
   },
   top20Badge: {
     backgroundColor: '#FFFDEC',
-    paddingHorizontal: Math.max(6, 6 * scale),
-    paddingVertical: Math.max(4, 4 * scale),
+    paddingHorizontal: moderateScale(6),
+    paddingVertical: moderateScale(4),
     borderRadius: isAndroid ? 4 : 0,
   },
   top20Text: {
-    fontSize: Math.max(12, 12 * scale),
+    fontSize: moderateScale(12),
     fontWeight: '600',
     color: '#F6C34C',
     fontFamily: FONT_FAMILIES['Inter-Regular'],
-    lineHeight: Math.max(15, 15 * scale),
+    lineHeight: moderateScale(15),
     includeFontPadding: isAndroid ? false : undefined,
     textAlignVertical: isAndroid ? 'center' : undefined,
   },
   milestonesContainer: {
     width: '100%',
-    paddingVertical: Math.max(12, 12 * scaleHeight),
-    paddingHorizontal: Math.max(20, 20 * scaleWidth),
+    paddingVertical: verticalScale(12),
+    paddingHorizontal: scale(20),
     backgroundColor: COLORS.white,
     borderRadius: 10,
     position: 'relative',
@@ -971,7 +972,7 @@ const styles = StyleSheet.create({
     marginHorizontal: isAndroid ? 0 : undefined,
   },
   milestonesProgress: {
-    height: Math.max(51, 51 * scaleHeight),
+    height: verticalScale(51),
     position: 'relative',
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -1015,42 +1016,42 @@ const styles = StyleSheet.create({
   },
   milestoneItem: {
     alignItems: 'center',
-    gap: Math.max(10, 10 * scale),
+    gap: scale(10),
     flex: 1,
   },
   milestoneDot: {
-    width: Math.max(12, 12 * scale),
-    height: Math.max(12, 12 * scale),
-    borderRadius: Math.max(6, 6 * scale),
+    width: scale(12),
+    height: scale(12),
+    borderRadius: moderateScale(6),
   },
   milestoneTextContainer: {
     alignItems: 'center',
-    gap: Math.max(2, 2 * scale),
+    gap: moderateScale(2),
   },
   milestoneName: {
-    fontSize: Math.max(12, 12 * scale),
+    fontSize: moderateScale(12),
     fontWeight: '500',
     fontFamily: FONT_FAMILIES['Inter-Regular'],
-    lineHeight: Math.max(15, 15 * scale),
+    lineHeight: moderateScale(15),
     includeFontPadding: isAndroid ? false : undefined,
     textAlignVertical: isAndroid ? 'center' : undefined,
   },
   milestoneDay: {
-    fontSize: Math.max(8, 8 * scale),
+    fontSize: moderateScale(8),
     fontFamily: FONT_FAMILIES['Inter-Regular'],
-    lineHeight: Math.max(10, 10 * scale),
+    lineHeight: moderateScale(10),
     includeFontPadding: isAndroid ? false : undefined,
     textAlignVertical: isAndroid ? 'center' : undefined,
   },
   rewardsContainer: {
-    paddingHorizontal: Math.max(20, 20 * scaleWidth),
-    paddingBottom: Math.max(40, 40 * scaleHeight),
+    paddingHorizontal: scale(20),
+    paddingBottom: verticalScale(40),
   },
   dividerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: Math.max(26, 26 * scaleHeight),
-    gap: Math.max(6, 6 * scale),
+    marginVertical: verticalScale(26),
+    gap: moderateScale(6),
   },
   dividerLine: {
     flex: 1,
@@ -1058,17 +1059,17 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.greyLight,
   },
   dividerText: {
-    fontSize: Math.max(14, 14 * scale),
+    fontSize: moderateScale(14),
     fontWeight: '500',
     color: COLORS.greyMedium,
     fontFamily: FONT_FAMILIES['NotoSerif-Regular'],
-    lineHeight: Math.max(21, 21 * scale),
+    lineHeight: moderateScale(21),
     includeFontPadding: isAndroid ? false : undefined,
     textAlignVertical: isAndroid ? 'center' : undefined,
   },
   rewardsList: {
-    gap: Math.max(20, 20 * scaleHeight),
-    marginBottom: Math.max(20, 20 * scaleHeight),
+    gap: verticalScale(20),
+    marginBottom: verticalScale(20),
   },
   // In progress state styles
   streakTextInProgress: {
@@ -1077,64 +1078,64 @@ const styles = StyleSheet.create({
   rewardItem: {
     flexDirection: 'row',
     alignItems: 'center',    
-    gap: Math.max(16, 16 * scaleWidth),
+    gap: scale(16),
     minHeight: isAndroid ? 80 : undefined,
   },
   rewardIconContainer: {
-    width: Math.max(62, 62 * scale),
-    minHeight: Math.max(62, 62 * scale),
+    width: moderateScale(62),
+    minHeight: moderateScale(62),
     height: '100%',
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: Math.max(5, 5 * scale),
+    paddingHorizontal: moderateScale(5),
     ...(isAndroid && {
       elevation: 1,
       shadowColor: COLORS.shadow,
-      shadowOffset: { width: 0, height: 1 },
+      shadowOffset: { width: 0, height: verticalScale(1) },
       shadowOpacity: 0.1,
       shadowRadius: 1,
     }),
   },
   rewardIcon: {
-    fontSize: Math.max(32, 32 * scale),
+    fontSize: moderateScale(32),
   },
   rewardContent: {
     flex: 1,
-    gap: Math.max(10, 10 * scale),
+    gap: scale(10),
   },
   rewardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Math.max(5, 5 * scale),
+    gap: moderateScale(5),
   },
   rewardTitle: {
-    fontSize: Math.max(14, 14 * scale),
+    fontSize: moderateScale(14),
     fontWeight: '500',
     color: COLORS.black,
     fontFamily: FONT_FAMILIES['NotoSerif-Regular'],
-    lineHeight: Math.max(21, 21 * scale),
+    lineHeight: moderateScale(21),
     includeFontPadding: isAndroid ? false : undefined,
     textAlignVertical: isAndroid ? 'center' : undefined,
   },
   rewardDescription: {
-    fontSize: Math.max(12, 12 * scale),
+    fontSize: moderateScale(12),
     color: COLORS.greyLight,
     fontFamily: FONT_FAMILIES['Inter-Regular'],
-    lineHeight: Math.max(15, 15 * scale),
+    lineHeight: moderateScale(15),
     includeFontPadding: isAndroid ? false : undefined,
     textAlignVertical: isAndroid ? 'center' : undefined,
   },
   personalizeButtonGradient: {
     borderRadius: 10,
-    padding: Math.max(2, 2 * scale),
+    padding: moderateScale(2),
   },
   personalizeButton: {
     backgroundColor: COLORS.white,
     borderRadius: 8,
-    paddingVertical: Math.max(9, 9 * scale),
+    paddingVertical: moderateScale(9),
     width: '100%',
-    paddingHorizontal: Math.max(14, 14 * scale),
+    paddingHorizontal: scale(14),
     minHeight: isAndroid ? 36 : undefined,
   },
   gradientTextContainer: {
@@ -1148,9 +1149,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   personalizeButtonText: {
-    fontSize: Math.max(12, 12 * scale),
+    fontSize: moderateScale(12),
     fontFamily: FONT_FAMILIES['Inter-Regular'],
-    lineHeight: Math.max(22, 22 * scale),
+    lineHeight: moderateScale(22),
     textAlign: 'center',
     includeFontPadding: isAndroid ? false : undefined,
     textAlignVertical: isAndroid ? 'center' : undefined,
@@ -1162,20 +1163,20 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     flex: 1,
-    height: Math.max(13, 13 * scale),
+    height: moderateScale(13),
     backgroundColor: '#EEE1F4',
-    borderRadius: Math.max(6.5, 6.5 * scale),
-    marginRight: Math.max(16, 16 * scaleWidth),
+    borderRadius: moderateScale(6.5),
+    marginRight: scale(16),
   },
   progressFill: {
     height: '100%',
-    borderRadius: Math.max(6.5, 6.5 * scale),
+    borderRadius: moderateScale(6.5),
   },
   streakText: {
-    fontSize: Math.max(10, 10 * scale),
+    fontSize: moderateScale(10),
     color: COLORS.warmPurple,
     fontFamily: FONT_FAMILIES['Inter-Regular'],
-    lineHeight: Math.max(12.5, 12.5 * scale),
+    lineHeight: moderateScale(12.5),
     includeFontPadding: isAndroid ? false : undefined,
     textAlignVertical: isAndroid ? 'center' : undefined,
   },

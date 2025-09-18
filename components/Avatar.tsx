@@ -2,6 +2,7 @@ import MaskedView from "@react-native-masked-view/masked-view";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
+import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
 import { FONT_FAMILIES } from '../lib/fonts';
 
 
@@ -112,42 +113,42 @@ export default function Avatar({ showMessage = true }: { showMessage?: boolean }
 const styles = StyleSheet.create({
     characterSection:
     {
-      width: 110,
-      paddingTop: 20,
+      width: scale(110),
+      paddingTop: verticalScale(20),
       alignItems: "center",
     },
     avatarLogo: {
-        width: 100,
-        height: 100,
+        width: scale(100),
+        height: scale(100),
     },
     image: {
         width: "100%",
         height: "100%",
     },
     shadow: {
-        width: 80,         // wider than avatar
-      height: 5,        // short height = oval shape
+        width: scale(80),         // wider than avatar
+      height: verticalScale(5),        // short height = oval shape
       backgroundColor: "rgba(0,0,0,0.2)", // semi-transparent black
       borderRadius: "50%",  // round corners to make it an ellipse
-      marginTop: 12,
+      marginTop: verticalScale(12),
     
     },
     introTextContainer: {
-        marginTop: 20,
-        maxWidth: 310,
+        marginTop: verticalScale(20),
+        maxWidth: '80%',
         width: "auto",
-        borderRadius: 10,
+        borderRadius: scale(8),
         borderTopLeftRadius: 0,
-        borderWidth: 1,
+        borderWidth: scale(1),
         borderColor: COLORS.outlineVariant,
         alignSelf: "flex-start",
-        padding: 1
+        padding: scale(1)
       },
       introText: {
-        paddingHorizontal: 15,
-        paddingVertical: 10,
-        fontSize: 16,
-        lineHeight: 18,
+        paddingHorizontal: scale(15),
+        paddingVertical: verticalScale(10),
+        fontSize: moderateScale(14),
+        lineHeight: verticalScale(18),
         fontFamily: FONT_FAMILIES['Inter-Regular']
       },
       

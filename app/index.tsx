@@ -4,6 +4,7 @@ import { StatusBar } from "expo-status-bar";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { moderateScale, verticalScale } from 'react-native-size-matters';
 // import { FONT_FAMILIES, useAppFonts } from './fonts';
 
 // Constants
@@ -38,7 +39,7 @@ export default function Index() {
   // }
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar style="dark" />
       <View style={styles.root}>
         <View style={styles.content}>
@@ -122,19 +123,19 @@ const styles = StyleSheet.create({
 
   // Text styles
   title: {
-    fontSize: 32,
+    fontSize: moderateScale(32),
     // fontFamily: FONT_FAMILIES['Inter-Regular'],
     fontWeight: 'bold',
     color: COLORS.onSurface,
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: verticalScale(10),
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: moderateScale(18),
     // fontFamily: FONT_FAMILIES['Inter-Regular'],
     color: COLORS.greyMedium,
     textAlign: 'center',
-    marginBottom: 50,
+    marginBottom: verticalScale(50),
   },
 
   // Button container
@@ -178,7 +179,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonText: {
-    fontSize: 18,
+    fontSize: moderateScale(18),
     // fontFamily: FONT_FAMILIES['Inter-Regular'],
     fontWeight: '600',
     color: COLORS.white,

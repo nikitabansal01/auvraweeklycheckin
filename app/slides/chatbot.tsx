@@ -9,6 +9,7 @@ import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
 import { Dimensions, Image, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
 import { FONT_FAMILIES, useAppFonts } from '../../lib/fonts';
 
 // Responsive dimensions
@@ -16,10 +17,39 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const isAndroid = Platform.OS === 'android';
 const isIOS = Platform.OS === 'ios';
 
-// Responsive scaling factors
-const scaleWidth = screenWidth / 375; // Base width from design
-const scaleHeight = screenHeight / 812; // Base height from design
-const scale = Math.min(scaleWidth, scaleHeight);
+// Font scaling system using react-native-size-matters
+const FONT_SIZES = {
+  // From Figma: Keyboard numbers (18.35px)
+  keyboardNumber: moderateScale(18.35),
+  
+  // From Figma: Header text (14px Noto Serif)
+  header: moderateScale(14),
+  
+  // From Figma: Message text (14px Inter Regular) - using moderateScale for better scaling
+  message: moderateScale(14),
+  
+  // From Figma: Button text (12px Inter Regular)
+  button: moderateScale(12),
+  
+  // From Figma: Time display (12px Inter Regular)
+  time: moderateScale(12),
+  
+  // From Figma: Status bar time (15.22px SF Pro Semibold)
+  statusBar: moderateScale(15.22),
+  
+  // Additional sizes for UI elements
+  title: moderateScale(18),
+  subtitle: moderateScale(16),
+  caption: moderateScale(10),
+  large: moderateScale(20),
+};
+
+// Line height scaling using react-native-size-matters
+const LINE_HEIGHTS = {
+  tight: moderateScale(16),
+  normal: moderateScale(18),
+  relaxed: moderateScale(20),
+};
 
 // Constants
 const COLORS = {
@@ -477,9 +507,9 @@ export default function Chatbot() {
           {(isRecording || recordingComplete) && (
             <View style={styles.recordingStatusContainer}>
               {isRecording ? (
-                <Text style={styles.recordingStatusText}>Recording... {formatTime(recordingTime)}</Text>
+                <Text style={styles.recordingStatusText}>{formatTime(recordingTime)}</Text>
               ) : recordingComplete ? (
-                <Text style={styles.recordingStatusText}>Recording complete! {formatTime(recordingTime)}</Text>
+                <Text style={styles.recordingStatusText}>{formatTime(recordingTime)}</Text>
               ) : null}
             </View>
           )}
@@ -531,8 +561,8 @@ export default function Chatbot() {
           <>
             <TouchableOpacity style={styles.whiteButton} onPress={() => setMode("idle")}>
               <Image
-                source={require("./../../assets/images/yap-icon.png")}
-                style={{ width: 25, height: 25 }}
+                source={require("./../../assets/images/yap-icon.svg")}
+                style={{ width: scale(25), height: scale(25) }}
                 resizeMode="contain"
               />
             </TouchableOpacity>
@@ -603,8 +633,8 @@ export default function Chatbot() {
           <View style={styles.btn55Container}>
             <TouchableOpacity style={styles.whiteButton} onPress={() => setMode("idle")}>
               <Image
-                source={require("./../../assets/images/yap-icon.png")}
-                style={{ width: 25, height: 25 }}
+                source={require("./../../assets/images/yap-icon.svg")}
+                style={{ width: scale(25), height: scale(25) }}
                 resizeMode="contain"
               />
             </TouchableOpacity>
@@ -727,7 +757,7 @@ const styles = StyleSheet.create({
   },
   root: {
     flex: 1,
-    paddingHorizontal: Math.max(15, 15 * scaleWidth),
+    paddingHorizontal: scale(15),
     width: '100%',
     maxWidth: screenWidth,
   },
@@ -742,7 +772,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: isAndroid ? Math.max(250, screenHeight * 0.3) : 200,
+    height: isAndroid ? verticalScale(250) : verticalScale(200),
     zIndex: -1,
     ...(isAndroid && {
       top: 0,
@@ -754,7 +784,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: isAndroid ? Math.max(250, screenHeight * 0.3) : 200,
+    height: isAndroid ? verticalScale(250) : verticalScale(200),
     zIndex: -1,
     ...(isAndroid && {
       top: 0,
@@ -765,50 +795,50 @@ const styles = StyleSheet.create({
   // Chat interface
   messagesContainer: {
     flex: 1,
-    marginTop: -50,
+    marginTop: verticalScale(-50),
     width: '100%',
   },
   scrollContent: {
-    paddingTop: 60,
-    paddingBottom: Math.max(20, 20 * scaleHeight),
+    paddingTop: verticalScale(60),
+    paddingBottom: verticalScale(20),
     flexGrow: 1,
     ...(isAndroid && {
-      paddingBottom: Math.max(40, 40 * scaleHeight),
+      paddingBottom: verticalScale(40),
     }),
   },
   messagesWrapper: {
-    paddingTop: 20,
+    paddingTop: verticalScale(20),
   },
 
   // Message bubbles
   botMessageContainer: {
     flexDirection: 'row',
     justifyContent: 'flex-start',
-    marginBottom: Math.max(15, 15 * scaleHeight),
+    marginBottom: verticalScale(15),
     zIndex: 1,
     width: '100%',
   },
   botMessageBubble: {
     maxWidth: '80%',
     backgroundColor: COLORS.white,
-    borderRadius: 15,
+    borderRadius: scale(8),
     borderTopLeftRadius: 0,
     borderWidth: 1,
     borderColor: COLORS.outlineVariant,
-    paddingHorizontal: Math.max(15, 15 * scaleWidth),
-    paddingVertical: Math.max(12, 12 * scaleHeight),
+    paddingHorizontal: scale(15),
+    paddingVertical: verticalScale(12),
     flexShrink: 1,
     ...(isAndroid && {
       elevation: 1,
       shadowColor: COLORS.outlineVariant,
-      shadowOffset: { width: 0, height: 1 },
+      shadowOffset: { width: 0, height: verticalScale(1) },
       shadowOpacity: 0.1,
       shadowRadius: 1,
     }),
   },
   botMessageText: {
-    fontSize: Math.max(16, 16 * scale),
-    lineHeight: Math.max(20, 20 * scale),
+    fontSize: FONT_SIZES.message,
+    lineHeight: LINE_HEIGHTS.normal,
     fontFamily: FONT_FAMILIES['Inter-Regular'],
     includeFontPadding: isAndroid ? false : undefined,
     textAlignVertical: isAndroid ? 'center' : undefined,
@@ -818,8 +848,8 @@ const styles = StyleSheet.create({
   userMessageContainer: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    marginBottom: Math.max(15, 15 * scaleHeight),
-    paddingRight: Math.max(15, 15 * scaleWidth),
+    marginBottom: verticalScale(15),
+    // paddingRight: scale(15),
     zIndex: 1,
     width: '100%',
   },
@@ -829,21 +859,21 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderTopRightRadius: 0,
     borderColor: COLORS.outlineVariant,
-    borderRadius: 15,
-    paddingHorizontal: Math.max(15, 15 * scaleWidth),
-    paddingVertical: Math.max(12, 12 * scaleHeight),
+    borderRadius: scale(8),
+    paddingHorizontal: scale(15),
+    paddingVertical: verticalScale(12),
     flexShrink: 1,
     ...(isAndroid && {
       elevation: 1,
       shadowColor: COLORS.outlineVariant,
-      shadowOffset: { width: 0, height: 1 },
+      shadowOffset: { width: 0, height: verticalScale(1) },
       shadowOpacity: 0.1,
       shadowRadius: 1,
     }),
   },
   userMessageText: {
-    fontSize: Math.max(16, 16 * scale),
-    lineHeight: Math.max(20, 20 * scale),
+    fontSize: FONT_SIZES.message,
+    lineHeight: LINE_HEIGHTS.normal,
     fontFamily: FONT_FAMILIES['Inter-Regular'],
     color: COLORS.onSurface,
     includeFontPadding: isAndroid ? false : undefined,
@@ -853,11 +883,11 @@ const styles = StyleSheet.create({
   },
   recordingStatusContainer: {
     alignItems: 'center',
-    paddingVertical: Math.max(10, 10 * scaleHeight),
-    paddingHorizontal: Math.max(15, 15 * scaleWidth),
+    paddingVertical: verticalScale(10),
+    paddingHorizontal: scale(15),
   },
   recordingStatusText: {
-    fontSize: Math.max(14, 14 * scale),
+    fontSize: FONT_SIZES.message,
     fontFamily: FONT_FAMILIES['Inter-Regular'],
     color: COLORS.greyMedium,
     textAlign: 'center',
@@ -869,35 +899,35 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    paddingVertical: Math.max(15, 15 * scaleHeight),
-    paddingHorizontal: Math.max(15, 15 * scaleWidth),
-    marginBottom: Math.max(25, 25 * scaleHeight),
+    paddingVertical: verticalScale(15),
+    paddingHorizontal: scale(15),
+    marginBottom: verticalScale(25),
     width: '100%',
   },
   inputField: {
     flex: 1,
     backgroundColor: COLORS.white,
-    borderRadius: 10,
-    paddingHorizontal: Math.max(20, 20 * scaleWidth),
-    paddingVertical: Math.max(12, 12 * scaleHeight),
-    marginRight: Math.max(10, 10 * scaleWidth),
-    minHeight: Math.max(50, 50 * scaleHeight),
-    maxHeight: Math.max(150, 150 * scaleHeight),
+    borderRadius: scale(10),
+    paddingHorizontal: scale(20),
+    paddingVertical: verticalScale(12),
+    marginRight: scale(10),
+    minHeight: verticalScale(50),
+    maxHeight: verticalScale(150),
     borderWidth: 1,
     borderColor: COLORS.outlineVariant,
     ...(isAndroid && {
       elevation: 1,
       shadowColor: COLORS.outlineVariant,
-      shadowOffset: { width: 0, height: 1 },
+      shadowOffset: { width: 0, height: verticalScale(1) },
       shadowOpacity: 0.1,
       shadowRadius: 1,
     }),
   },
   textInput: {
-    fontSize: Math.max(14, 14 * scale),
+    fontSize: FONT_SIZES.message,
     color: COLORS.onSurface,
-    minHeight: Math.max(20, 20 * scale),
-    maxHeight: Math.max(120, 120 * scaleHeight), // Allow multiline expansion
+    minHeight: verticalScale(20),
+    maxHeight: verticalScale(120), // Allow multiline expansion
     includeFontPadding: isAndroid ? false : undefined,
     textAlignVertical: isAndroid ? 'top' : undefined, // Better for multiline
     flexWrap: 'wrap',
@@ -906,75 +936,75 @@ const styles = StyleSheet.create({
 
   // Buttons
   whiteButton: {
-    width: Math.max(55, 55 * scale),
-    height: Math.max(55, 55 * scale),
+    width: scale(55),
+    height: scale(55),
     backgroundColor: COLORS.white,
-    borderRadius: 50,
-    marginRight: Math.max(10, 10 * scaleWidth),
+    borderRadius: scale(50),
+    marginRight: scale(10),
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 44, // Minimum touch target
-    minHeight: 44,
+    minWidth: scale(44), // Minimum touch target
+    minHeight: scale(44),
     ...(isAndroid && {
       elevation: 2,
       shadowColor: COLORS.outlineVariant,
-      shadowOffset: { width: 0, height: 2 },
+      shadowOffset: { width: 0, height: verticalScale(2) },
       shadowOpacity: 0.1,
       shadowRadius: 2,
     }),
   },
   sendButton: {
-    width: Math.max(45, 45 * scale),
-    height: Math.max(45, 45 * scale),
-    borderRadius: Math.max(22.5, 22.5 * scale),
-    minWidth: 44,
-    minHeight: 44,
+    width: scale(45),
+    height: scale(45),
+    borderRadius: scale(22.5),
+    minWidth: scale(44),
+    minHeight: scale(44),
   },
   buttonGradient: {
     width: '100%',
     height: '100%',
-    borderRadius: 22.5,
+    borderRadius: scale(22.5),
     justifyContent: 'center',
     alignItems: 'center',
   },
   sendButtonLg: {
-    width: 55,
-    height: 55,
-    borderRadius: 27.5,
-    marginRight: 10,
+    width: scale(55),
+    height: scale(55),
+    borderRadius: scale(27.5),
+    marginRight: scale(10),
   },
   sendButtonGradient: {
     width: '100%',
     height: '100%',
-    borderRadius: 27.5,
+    borderRadius: scale(27.5),
     justifyContent: 'center',
     alignItems: 'center',
   },
 
   // Choice options
   choiceOptionsContainer: {
-    paddingHorizontal: Math.max(15, 15 * scaleWidth),
-    paddingVertical: Math.max(20, 20 * scaleHeight),
+    paddingHorizontal: scale(15),
+    paddingVertical: verticalScale(20),
     width: '100%',
   },
   choiceOptionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'flex-end',
-    gap: Math.max(5, 5 * scale),
-    paddingBottom: Math.max(10, 10 * scaleHeight),
+    gap: scale(5),
+    paddingBottom: verticalScale(10),
     width: '100%',
   },
   choiceButton: {
     width: 'auto',
-    marginBottom: Math.max(5, 5 * scale),
+    marginBottom: verticalScale(5),
     borderRadius: 20,
     overflow: 'hidden',
     minHeight: 44, // Consistent height for both states
     ...(isAndroid && {
       elevation: 1,
       shadowColor: COLORS.outlineVariant,
-      shadowOffset: { width: 0, height: 1 },
+      shadowOffset: { width: 0, height: verticalScale(1) },
       shadowOpacity: 0.1,
       shadowRadius: 1,
     }),
@@ -983,8 +1013,8 @@ const styles = StyleSheet.create({
     // Additional styles for selected state if needed
   },
   choiceButtonGradient: {
-    paddingHorizontal: Math.max(15, 15 * scaleWidth),
-    paddingVertical: Math.max(12, 12 * scaleHeight),
+    paddingHorizontal: scale(15),
+    paddingVertical: verticalScale(12),
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 44,
@@ -998,27 +1028,27 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   choiceButtonText: {
-    fontSize: Math.max(14, 14 * scale),
+    fontSize: FONT_SIZES.message,
     fontFamily: FONT_FAMILIES['Inter-Regular'],
     fontWeight: '400',
     color: COLORS.white,
     textAlign: 'center',
-    lineHeight: Math.max(18, 18 * scale),
+    lineHeight: LINE_HEIGHTS.normal,
     includeFontPadding: isAndroid ? false : undefined,
     textAlignVertical: isAndroid ? 'center' : undefined,
   },
   choiceButtonTextUnselected: {
-    fontSize: Math.max(14, 14 * scale),
+    fontSize: FONT_SIZES.message,
     fontFamily: FONT_FAMILIES['Inter-Regular'],
     fontWeight: '400',
     color: COLORS.onSurface,
     textAlign: 'center',
-    paddingHorizontal: Math.max(15, 15 * scaleWidth),
-    paddingVertical: Math.max(12, 12 * scaleHeight),
+    paddingHorizontal: scale(15),
+    paddingVertical: verticalScale(12),
     backgroundColor: '#FDF4F8',
     borderRadius: 20,
     minHeight: 44,
-    lineHeight: Math.max(18, 18 * scale),
+    lineHeight: LINE_HEIGHTS.normal,
     includeFontPadding: isAndroid ? false : undefined,
     textAlignVertical: isAndroid ? 'center' : undefined,
   },
@@ -1029,9 +1059,9 @@ const styles = StyleSheet.create({
   // CTA wrapper
   CTAWrapper: {
     flexDirection: 'row',
-    paddingVertical: Math.max(15, 15 * scaleHeight),
-    paddingHorizontal: Math.max(15, 15 * scaleWidth),
-    marginBottom: Math.max(25, 25 * scaleHeight),
+    paddingVertical: verticalScale(15),
+    paddingHorizontal: scale(15),
+    marginBottom: verticalScale(25),
     justifyContent: 'space-between',
     alignItems: 'center',
     width: '100%',
@@ -1043,9 +1073,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   btnLabel: {
-    marginTop: Math.max(9, 9 * scale),
+    marginTop: verticalScale(9),
     color: COLORS.onSurface,
-    fontSize: Math.max(14, 14 * scale),
+    fontSize: FONT_SIZES.message,
     fontFamily: FONT_FAMILIES['Inter-Regular'],
     includeFontPadding: isAndroid ? false : undefined,
     textAlignVertical: isAndroid ? 'center' : undefined,
@@ -1061,7 +1091,7 @@ const styles = StyleSheet.create({
     // marginVertical: 20,
   },
   statusText: {
-    fontSize: Math.max(16, 16 * scale),
+    fontSize: FONT_SIZES.subtitle,
     fontFamily: FONT_FAMILIES['Inter-Regular'],
     color: COLORS.greyMedium,
     textAlign: 'center',
@@ -1072,7 +1102,7 @@ const styles = StyleSheet.create({
     // marginVertical: 40,
   },
   timerText: {
-    fontSize: Math.max(16, 16 * scale),
+    fontSize: FONT_SIZES.subtitle,
     fontFamily: FONT_FAMILIES['Inter-Regular'],
     color: COLORS.onSurface,
     textAlign: 'center',
@@ -1081,17 +1111,17 @@ const styles = StyleSheet.create({
   },
   yapSendButtonContainer: {
     alignItems: 'center',
-    marginTop: Math.max(10, 10 * scale),
-    paddingVertical: Math.max(15, 15 * scaleHeight),
-    paddingHorizontal: Math.max(15, 15 * scaleWidth),
-    marginBottom: Math.max(25, 25 * scaleHeight),
+    marginTop: verticalScale(10),
+    paddingVertical: verticalScale(15),
+    paddingHorizontal: scale(15),
+    marginBottom: verticalScale(25),
     width: '100%',
   },
   yapSendButton: {
-    width: Math.max(80, 80 * scale),
-    height: Math.max(80, 80 * scale),
-    borderRadius: Math.max(40, 40 * scale),
-    marginBottom: Math.max(10, 10 * scale),
+    width: scale(80),
+    height: scale(80),
+    borderRadius: scale(40),
+    marginBottom: verticalScale(10),
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -1106,12 +1136,12 @@ const styles = StyleSheet.create({
   yapSendButtonGradient: {
     width: '100%',
     height: '100%',
-    borderRadius: Math.max(40, 40 * scale),
+    borderRadius: moderateScale(40),
     justifyContent: 'center',
     alignItems: 'center',
   },
   yapSendButtonLabel: {
-    fontSize: Math.max(16, 16 * scale),
+    fontSize: FONT_SIZES.subtitle,
     fontFamily: FONT_FAMILIES['Inter-Regular'],
     color: COLORS.onSurface,
     textAlign: 'center',
@@ -1138,58 +1168,57 @@ const styles = StyleSheet.create({
   },
   sliderTopSpacer: {
     flex: 1,
-    minHeight: Math.max(50, 50 * scaleHeight),
+    minHeight: verticalScale(50),
   },
   sliderBottomSpacer: {
     flex: 1,
-    minHeight: Math.max(50, 50 * scaleHeight),
+    minHeight: verticalScale(50),
   },
 
   // Slider styles
   sliderContainer: {
-    paddingLeft: Math.max(20, 20 * scaleWidth),
-    paddingVertical: Math.max(30, 30 * scaleHeight),
+    paddingHorizontal: scale(20), // Changed to horizontal padding for better balance
+    paddingVertical: verticalScale(30),
     width: '100%',
-    maxWidth: screenWidth - 40, // Ensure it doesn't exceed screen width
+    maxWidth: '100%',
     alignItems: 'center',
-    overflow: 'hidden', // Prevent horizontal overflow
+    // Removed overflow: 'hidden' to prevent cropping
   },
   sliderNumbers: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: Math.max(15, 15 * scale),
+    justifyContent: 'space-evenly', // Changed from space-between to space-evenly
+    marginBottom: scale(15),
     width: '100%',
-    maxWidth: screenWidth - 80, // Account for container padding
-    paddingHorizontal: 0,
+    maxWidth: '100%',
+    paddingHorizontal: scale(15), // Increased padding to prevent edge cropping
     flexWrap: 'nowrap',
-    overflow: 'hidden', // Prevent horizontal overflow
+    // Removed overflow: 'hidden' to prevent cropping
   },
   sliderNumber: {
-    width: Math.max(32, Math.min(36, (screenWidth - 100) / 9)), // Responsive width based on screen
-    height: Math.max(32, Math.min(36, (screenWidth - 100) / 9)), // Responsive height
-    borderRadius: Math.max(8, 8 * scale),
-    marginRight: Math.max(1, 1 * scale),
+    width: scale(30), // Slightly smaller to ensure all 9 numbers fit
+    height: scale(30), // Slightly smaller to ensure all 9 numbers fit
+    borderRadius: scale(8),
+    marginHorizontal: scale(1), // Use horizontal margin instead of just right
     borderColor: COLORS.outlineVariant,
     justifyContent: 'center',
     alignItems: 'center',
-    minWidth: 32,
-    minHeight: 32,
-    flex: 1,
-    maxWidth: (screenWidth - 100) / 9,
+    minWidth: scale(28), // Reduced minimum size to fit better
+    minHeight: scale(28),
+    // Removed flex: 1 to prevent stretching
     ...(isAndroid && {
       elevation: 1,
       shadowColor: COLORS.outlineVariant,
-      shadowOffset: { width: 0, height: 1 },
+      shadowOffset: { width: 0, height: verticalScale(1) },
       shadowOpacity: 0.1,
       shadowRadius: 1,
     }),
   },
   sliderNumberSelected: {
     borderColor: COLORS.onPrimaryContainer,
-    borderWidth: 2,
+    borderWidth: scale(2),
   },
   sliderNumberText: {
-    fontSize: Math.max(16, 16 * scale),
+    fontSize: FONT_SIZES.subtitle,
     fontFamily: FONT_FAMILIES['Inter-Regular'],
     color: COLORS.onSurface,
     includeFontPadding: isAndroid ? false : undefined,
@@ -1197,29 +1226,29 @@ const styles = StyleSheet.create({
   },
   sliderLabels: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: Math.max(6, 6 * scale),
+    justifyContent: 'space-evenly', // Changed to match sliderNumbers
+    paddingHorizontal: scale(15), // Match the sliderNumbers padding
     width: '100%',
-    maxWidth: screenWidth - 80, // Account for container padding
+    maxWidth: '100%',
     flexWrap: 'nowrap',
-    overflow: 'hidden', // Prevent horizontal overflow
+    // Removed overflow: 'hidden' to prevent cropping
   },
   sliderLabel: {
-    fontSize: Math.max(10, Math.min(11, 11 * scale)),
+    fontSize: FONT_SIZES.caption,
     fontFamily: FONT_FAMILIES['Inter-Regular'],
     color: COLORS.greyMedium,
     textAlign: 'center',
     includeFontPadding: isAndroid ? false : undefined,
     textAlignVertical: isAndroid ? 'center' : undefined,
-    flex: 1,
-    maxWidth: (screenWidth - 100) / 5, // 5 labels
+    // Removed flex: 1 to prevent stretching issues
+    minWidth: scale(40), // Ensure labels have enough space
   },
   selectedValueContainer: {
     alignItems: 'center',
-    paddingVertical: Math.max(20, 20 * scaleHeight),
+    paddingVertical: verticalScale(20),
   },
   selectedValueNumber: {
-    fontSize: Math.max(48, 48 * scale),
+    fontSize: FONT_SIZES.large,
     fontFamily: FONT_FAMILIES['Inter-Regular'],
     color: COLORS.onSurface,
     fontWeight: 'bold',
@@ -1227,10 +1256,10 @@ const styles = StyleSheet.create({
     textAlignVertical: isAndroid ? 'center' : undefined,
   },
   selectedValueLabel: {
-    fontSize: Math.max(18, 18 * scale),
+    fontSize: FONT_SIZES.title,
     fontFamily: FONT_FAMILIES['Inter-Regular'],
     color: COLORS.greyMedium,
-    marginTop: Math.max(5, 5 * scale),
+    marginTop: moderateScale(5),
     includeFontPadding: isAndroid ? false : undefined,
     textAlignVertical: isAndroid ? 'center' : undefined,
   },
