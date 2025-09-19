@@ -147,9 +147,8 @@ const styles = StyleSheet.create({
       introText: {
         paddingHorizontal: scale(15),
         paddingVertical: verticalScale(10),
-        fontSize: moderateScale(14),
+        fontSize: moderateScale(14, 1.5),
         lineHeight: verticalScale(18),
         fontFamily: FONT_FAMILIES['Inter-Regular']
-      },
-      
+      },    
 })

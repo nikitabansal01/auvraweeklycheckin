@@ -18,38 +18,38 @@ const isAndroid = Platform.OS === 'android';
 const isIOS = Platform.OS === 'ios';
 
 // Font scaling system using react-native-size-matters
-// Using moderateScale with factor 0.5 for aggressive scaling
+// Using moderateScale with factor 1.5 for aggressive scaling
 const FONT_SIZES = {
   // From Figma: Keyboard numbers (18.35px)
-  keyboardNumber: moderateScale(18.35, 0.5),
+  keyboardNumber: moderateScale(18.35, 1.5),
   
   // From Figma: Header text (14px Noto Serif)
-  header: moderateScale(14, 0.5),
+  header: moderateScale(14, 1.5),
   
   // From Figma: Message text (14px Inter Regular) - using moderateScale for better scaling
-  message: moderateScale(14, 0.5),
+  message: moderateScale(14,1.5),
   
   // From Figma: Button text (12px Inter Regular)
-  button: moderateScale(12, 0.5),
+  button: moderateScale(12, 1.5),
   
   // From Figma: Time display (12px Inter Regular)
-  time: moderateScale(12, 0.5),
+  time: moderateScale(12, 1.5),
   
   // From Figma: Status bar time (15.22px SF Pro Semibold)
-  statusBar: moderateScale(15.22, 0.5),
+  statusBar: moderateScale(15.22, 1.5),
   
   // Additional sizes for UI elements
-  title: moderateScale(18, 0.5),
-  subtitle: moderateScale(16, 0.5),
-  caption: moderateScale(10, 0.5),
-  large: moderateScale(20, 0.5),
+  title: moderateScale(18, 1.5),
+  subtitle: moderateScale(16, 1.5),
+  caption: moderateScale(10, 1.5),
+  large: moderateScale(20, 1.5),
 };
 
 // Line height scaling using react-native-size-matters
 const LINE_HEIGHTS = {
-  tight: moderateScale(16, 0.5),
-  normal: moderateScale(18, 0.5),
-  relaxed: moderateScale(20, 0.5),
+  tight: moderateScale(16, 1.5),
+  normal: moderateScale(18, 1.5),
+  relaxed: moderateScale(20, 1.5),
 };
 
 // Constants

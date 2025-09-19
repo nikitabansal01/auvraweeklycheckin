@@ -12,7 +12,7 @@ const FONT_SIZES = {
   // Different scaling methods
   moderate: moderateScale(14),
   moderateFactor: moderateScale(14, 0.3),
-  moderateAggressive: moderateScale(14, 0.5),
+  moderateAggressive: moderateScale(14, 1.5),
   scale: scale(14),
   vertical: verticalScale(14),
   
@@ -47,7 +47,7 @@ export default function DebugFonts() {
         </Text>
         
         <Text style={[styles.testText, { fontSize: FONT_SIZES.moderateAggressive }]}>
-          Moderate Aggressive: This uses moderateScale(14, 0.5)
+          Moderate Aggressive: This uses moderateScale(14, 1.5)
         </Text>
         
         <Text style={[styles.testText, { fontSize: FONT_SIZES.scale }]}>
