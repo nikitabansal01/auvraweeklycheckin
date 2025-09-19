@@ -725,8 +725,8 @@ export default function Chatbot() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={isAndroid ? ["top", "left", "right"] : ["top"]}>
-      <StatusBar style="dark" backgroundColor={isAndroid ? COLORS.white : undefined} />
+    <SafeAreaView style={styles.container} edges={["top"]}>
+      <StatusBar style="dark"/>
       {mode === "type" ? (
         <KeyboardAvoidingView
           style={styles.kav}
@@ -747,7 +747,7 @@ const styles = StyleSheet.create({
   // Layout
   container: {
     flex: 1,
-    backgroundColor: isAndroid ? COLORS.surface : COLORS.white,
+    backgroundColor: COLORS.white,
     ...(isAndroid && {
       minHeight: screenHeight,
     }),
@@ -772,24 +772,16 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: isAndroid ? verticalScale(250) : verticalScale(200),
+    height: verticalScale(250),
     zIndex: -1,
-    ...(isAndroid && {
-      top: 0,
-      height: screenHeight,
-    }),
   },
   gradientFade: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    height: isAndroid ? verticalScale(250) : verticalScale(200),
+    height: verticalScale(250),
     zIndex: -1,
-    ...(isAndroid && {
-      top: 0,
-      height: screenHeight,
-    }),
   },
 
   // Chat interface
