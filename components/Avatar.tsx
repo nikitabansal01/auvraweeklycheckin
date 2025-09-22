@@ -135,6 +135,7 @@ const styles = StyleSheet.create({
     },
     introTextContainer: {
         marginTop: verticalScale(20),
+        marginBottom: verticalScale(15),
         maxWidth: '80%',
         width: "auto",
         borderRadius: scale(8),

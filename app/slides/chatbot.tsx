@@ -43,6 +43,8 @@ const FONT_SIZES = {
   subtitle: moderateScale(16, 1.5),
   caption: moderateScale(10, 1.5),
   large: moderateScale(20, 1.5),
+  small: moderateScale(12, 1.5),
+  extraSmall: moderateScale(10, 1.5),
 };
 
 // Line height scaling using react-native-size-matters
@@ -65,6 +67,7 @@ const COLORS = {
   white: "#FFFFFF",
   gradPurple: "#A78BFA",
   gradPink: "#F0A3C2",
+  warmPurple: "#C17EC9",
 };
 
 // Types
@@ -773,7 +776,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: verticalScale(250),
+    height: verticalScale(150),
     zIndex: -1,
   },
   gradientFade: {
@@ -781,7 +784,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: verticalScale(250),
+    height: verticalScale(150),
     zIndex: -1,
   },
 
@@ -800,7 +803,7 @@ const styles = StyleSheet.create({
     }),
   },
   messagesWrapper: {
-    paddingTop: verticalScale(20),
+    // paddingTop: verticalScale(20),
   },
 
   // Message bubbles
@@ -1170,8 +1173,8 @@ const styles = StyleSheet.create({
 
   // Slider styles
   sliderContainer: {
-    paddingHorizontal: scale(20), // Changed to horizontal padding for better balance
-    paddingVertical: verticalScale(30),
+    // paddingHorizontal: scale(20), // Changed to horizontal padding for better balance
+    // paddingVertical: verticalScale(30),
     width: '100%',
     maxWidth: '100%',
     alignItems: 'center',
@@ -1179,11 +1182,12 @@ const styles = StyleSheet.create({
   },
   sliderNumbers: {
     flexDirection: 'row',
-    justifyContent: 'space-evenly', // Changed from space-between to space-evenly
+    justifyContent: 'space-between', // Changed from space-between to space-evenly
     marginBottom: scale(15),
     width: '100%',
     maxWidth: '100%',
-    paddingHorizontal: scale(15), // Increased padding to prevent edge cropping
+    paddingLeft: scale(15),
+    // paddingHorizontal: scale(15), // Increased padding to prevent edge cropping
     flexWrap: 'nowrap',
     // Removed overflow: 'hidden' to prevent cropping
   },
@@ -1211,7 +1215,7 @@ const styles = StyleSheet.create({
     borderWidth: scale(2),
   },
   sliderNumberText: {
-    fontSize: FONT_SIZES.subtitle,
+    fontSize: FONT_SIZES.small,
     fontFamily: FONT_FAMILIES['Inter-Regular'],
     color: COLORS.onSurface,
     includeFontPadding: isAndroid ? false : undefined,
@@ -1219,8 +1223,9 @@ const styles = StyleSheet.create({
   },
   sliderLabels: {
     flexDirection: 'row',
-    justifyContent: 'space-evenly', // Changed to match sliderNumbers
-    paddingHorizontal: scale(15), // Match the sliderNumbers padding
+    justifyContent: 'space-between', // Changed to match sliderNumbers
+    // paddingHorizontal: scale(15), // Match the sliderNumbers padding
+    paddingLeft: scale(15),
     width: '100%',
     maxWidth: '100%',
     flexWrap: 'nowrap',
@@ -1229,7 +1234,7 @@ const styles = StyleSheet.create({
   sliderLabel: {
     fontSize: FONT_SIZES.caption,
     fontFamily: FONT_FAMILIES['Inter-Regular'],
-    color: COLORS.greyMedium,
+    color: COLORS.greyLight,
     textAlign: 'center',
     includeFontPadding: isAndroid ? false : undefined,
     textAlignVertical: isAndroid ? 'center' : undefined,
@@ -1243,7 +1248,7 @@ const styles = StyleSheet.create({
   selectedValueNumber: {
     fontSize: FONT_SIZES.large,
     fontFamily: FONT_FAMILIES['Inter-Regular'],
-    color: COLORS.onSurface,
+    color: COLORS.warmPurple,
     fontWeight: 'bold',
     includeFontPadding: isAndroid ? false : undefined,
     textAlignVertical: isAndroid ? 'center' : undefined,
@@ -1251,7 +1256,7 @@ const styles = StyleSheet.create({
   selectedValueLabel: {
     fontSize: FONT_SIZES.title,
     fontFamily: FONT_FAMILIES['Inter-Regular'],
-    color: COLORS.greyMedium,
+    color: COLORS.warmPurple,
     marginTop: moderateScale(5),
     includeFontPadding: isAndroid ? false : undefined,
     textAlignVertical: isAndroid ? 'center' : undefined,
