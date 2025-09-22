@@ -369,6 +369,7 @@ const milestones: Milestone[] = [
 ];
 
   const renderLabsSection = () => (
+    
     <LinearGradient
       colors={[
         'rgba(162, 154, 234, 0.5)',
@@ -379,13 +380,12 @@ const milestones: Milestone[] = [
       ]}
       locations={[0.1479, 0.3858, 0.5196, 0.6906, 0.8913]}
       start={{ x: 0, y: 0 }}
-      end={{ x: 0.8, y: 1 }}
+      end={{ x: 1, y: 1 }}
       style={[
         styles.labsSection,
         isAndroid ? { renderToHardwareTextureAndroid: true } as any : undefined
       ]}
     >
-      
       <View style={styles.labsHeader}>
         <TouchableOpacity style={styles.backButton} onPress={navigateToIndex}>
           <Ionicons name="chevron-back" size={24} color={COLORS.black} />
@@ -395,14 +395,14 @@ const milestones: Milestone[] = [
 
       <View style={styles.labsContent}>
         <View style={styles.labsCard}>
-               <View style={styles.labsIconContainer}>
-                 <View style={styles.labsIcon}>
-                   <Image 
-                     source={BLOOD_REPORT_IMAGE}
-                     style={styles.bloodReportIcon}
-                     resizeMode="contain"
-                   />
-                 </View>
+          <View style={styles.labsIconContainer}>
+            <View style={styles.labsIcon}>
+              <Image 
+                source={BLOOD_REPORT_IMAGE}
+                style={styles.bloodReportIcon}
+                resizeMode="contain"
+              />
+            </View>
             <View style={[styles.labsTag, { top: scale(0), left: scale(0) }]}>
               <Text style={styles.labsTagText}>DHEA</Text>
             </View>
@@ -726,9 +726,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-start',
-    marginBottom: isAndroid ? verticalScale(25) : verticalScale(30),
+    // marginBottom: isAndroid ? verticalScale(25) : verticalScale(30),
     zIndex: 1,
-    paddingTop: verticalScale(30)
+    paddingTop: verticalScale(20)
   },
   labsTitleAligned: {
     fontSize: moderateScale(14, 1.5),
@@ -738,7 +738,7 @@ const styles = StyleSheet.create({
     lineHeight: moderateScale(21, 1.5),
     position: 'absolute',
     left: scale(126), // Responsive positioning
-    top: verticalScale(40),
+    top: verticalScale(28),
     includeFontPadding: isAndroid ? false : undefined,
     textAlignVertical: isAndroid ? 'center' : undefined,
   },
@@ -764,7 +764,7 @@ const styles = StyleSheet.create({
     width: scale(36),
   },
   labsContent: {
-    marginBottom: verticalScale(20),
+    paddingVertical: verticalScale(20),
     zIndex: 1,
   },
   labsCard: {
@@ -882,6 +882,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: COLORS.white,
     minHeight: isAndroid ? 300 : undefined,
+    width: '100%',
   },
   streakGradientOverlay: {
     position: 'absolute',

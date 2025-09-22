@@ -814,7 +814,7 @@ const styles = StyleSheet.create({
   botMessageBubble: {
     maxWidth: '80%',
     backgroundColor: COLORS.white,
-    borderRadius: scale(8),
+    borderRadius: scale(10),
     borderTopLeftRadius: 0,
     borderWidth: 1,
     borderColor: COLORS.outlineVariant,
@@ -852,7 +852,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderTopRightRadius: 0,
     borderColor: COLORS.outlineVariant,
-    borderRadius: scale(8),
+    borderRadius: scale(10),
     paddingHorizontal: scale(15),
     paddingVertical: verticalScale(12),
     flexShrink: 1,
