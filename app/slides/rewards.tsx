@@ -474,7 +474,7 @@ export default function Rewards() {
 <View style={styles.streakSection}>
     <Animation />
         <LinearGradient
-          colors={['rgba(252, 244, 255, 0)', 'rgba(221, 194, 233, 0.5)']}
+          colors={['rgba(255, 255, 255, 0)', 'rgba(221, 194, 233, 0.6)']}
           locations={[0, 1]}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
@@ -911,13 +911,13 @@ const styles = StyleSheet.create({
     // gap: verticalScale(30),
     // position: 'relative',
     // overflow: 'hidden',
-    // backgroundColor: COLORS.white,
+    backgroundColor: COLORS.white,
     // minHeight: isAndroid ? 300 : undefined,
     // width: '100%',
     // position: "relative",
     flex: 1,
     overflow: "hidden",
-    backgroundColor: 'transparent',
+    // backgroundColor: 'transparent',
     // backgroundColor: COLORS.white,
     // width: "100%",       // ✅ ensure parent covers the whole screen width
     // minHeight: isAndroid ? 300 : undefined,
@@ -935,12 +935,12 @@ const styles = StyleSheet.create({
   },
   streakGradientOverlay: {
     position: 'absolute',
-    top: 0,
+    top: verticalScale(80),
     left: 0,
     right: 0,
     bottom: 0,
     zIndex: -1, // Higher than animation to be on top
-    opacity: 0.8,
+    opacity: 1,
   },
   streakContent: {
     flex: 1,
