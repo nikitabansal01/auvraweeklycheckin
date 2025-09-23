@@ -177,7 +177,7 @@ export default function Rewards() {
           animationData={require("../../assets/animations/moving-glow-bg.json")}
           loop
           autoPlay
-          style={styles.streakBackgroundAnimation}
+          style={{...styles.streakBackgroundAnimation, objectFit: 'cover'}}
         />
       );
     } else {
@@ -187,7 +187,7 @@ export default function Rewards() {
           source={require("../../assets/animations/moving-glow-bg.json")}
           autoPlay
           loop
-          style={styles.streakBackgroundAnimation}
+          style={{...styles.streakBackgroundAnimation, objectFit: 'cover'}}
         />
       );
     }
@@ -472,7 +472,7 @@ export default function Rewards() {
 
         {/* Gradient overlay */}
 <View style={styles.streakSection}>
-<Animation />
+    <Animation />
         <LinearGradient
           colors={['rgba(252, 244, 255, 0)', 'rgba(221, 194, 233, 0.5)']}
           locations={[0, 1]}
@@ -481,7 +481,7 @@ export default function Rewards() {
           style={styles.streakGradientOverlay}
         />
        
-        <View style={styles.streakHeader}>
+        <View style={styles.streakContent}>
           <Text style={styles.streakTitle}>🎁 Milestones & Rewards 🎁</Text>
 
           <View style={styles.streakNumberContainer}>
@@ -914,26 +914,24 @@ const styles = StyleSheet.create({
     // backgroundColor: COLORS.white,
     // minHeight: isAndroid ? 300 : undefined,
     // width: '100%',
-    position: "relative",
+    // position: "relative",
+    flex: 1,
     overflow: "hidden",
-    backgroundColor: COLORS.white,
-    width: "100%",       // ✅ ensure parent covers the whole screen width
-    minHeight: isAndroid ? 300 : undefined,
+    backgroundColor: 'transparent',
+    // backgroundColor: COLORS.white,
+    // width: "100%",       // ✅ ensure parent covers the whole screen width
+    // minHeight: isAndroid ? 300 : undefined,
     
   
   },
   streakBackgroundAnimation: {
     position: "absolute",
-    top: -50,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    // width: "100%",
-    height: "100%",
-    width: screenWidth, // full device width
-    zIndex: -2, // behind everything
-    minHeight: screenHeight * 0.5, // give a fixed % of screen height (40% here)
-    opacity: 0.6,
+    top: -screenHeight * 0.13,      // 10% of screen height above
+    left: -screenWidth * 0.2,
+    width: screenWidth  * 1.4, // full device width
+    zIndex: -2, 
+    minHeight: screenHeight * 0.6, // give a fixed % of screen height (40% here)
+    opacity: 0.3,
   },
   streakGradientOverlay: {
     position: 'absolute',
@@ -941,14 +939,14 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    zIndex: 1, // Higher than animation to be on top
+    zIndex: -1, // Higher than animation to be on top
     opacity: 0.8,
   },
-  streakHeader: {
+  streakContent: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: scale(20), // Add padding since container no longer has it
-    // gap: 20,
-    zIndex: 2,
+    zIndex: 1,
   },
   streakTitle: {
     fontSize: moderateScale(14, 1.5),

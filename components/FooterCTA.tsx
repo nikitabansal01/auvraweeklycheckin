@@ -161,8 +161,10 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "flex-end",
         justifyContent: "space-between",
-        paddingHorizontal: scale(39),
-        paddingBottom: verticalScale(40)
+        paddingHorizontal: scale(54),
+        paddingBottom: verticalScale(20),
+        marginTop: verticalScale(10),
+
     },
     btn55Container: {
         alignItems: "center",

@@ -570,12 +570,12 @@ export default function Chatbot() {
             <TouchableOpacity style={styles.whiteButton} onPress={() => setMode("idle")}>
               <Image
                 source={require("./../../assets/images/yap-icon.png")}
-                style={{ width: scale(25), height: scale(25) }}
+                style={{ width: scale(24), height: scale(24) }}
                 resizeMode="contain"
               />
             </TouchableOpacity>
             <TouchableOpacity style={styles.whiteButton} onPress={() => setMode("tap")}>
-              <Ionicons name="checkmark-circle-outline" size={30} color={COLORS.onPrimaryContainer} />
+              <Ionicons name="checkmark-circle-outline" style={{fontSize: moderateScale(24, 1.5)}} color={COLORS.onPrimaryContainer} />
             </TouchableOpacity>
           </>
         ) : (
@@ -584,7 +584,7 @@ export default function Chatbot() {
               colors={[COLORS.gradPurple, COLORS.gradPink]}
               style={styles.buttonGradient}
             >
-              <Ionicons name="send" size={20} color={COLORS.white} />
+              <Ionicons name="send" style={{fontSize: moderateScale(24, 1.5)}} color={COLORS.white} />
             </LinearGradient>
           </TouchableOpacity>
         )}
@@ -634,7 +634,7 @@ export default function Chatbot() {
         <View style={styles.CTAGroup1}>
           <View style={styles.btn55Container}>
             <TouchableOpacity style={styles.whiteButton} onPress={() => setMode("type")}>
-              <Ionicons name="chatbubble-ellipses-outline" size={30} color={COLORS.onPrimaryContainer} />
+              <Ionicons name="chatbubble-ellipses-outline" style={{fontSize: 24}} color={COLORS.onPrimaryContainer} />
             </TouchableOpacity>
             <Text style={styles.btnLabel}>type</Text>
           </View>
@@ -642,7 +642,7 @@ export default function Chatbot() {
             <TouchableOpacity style={styles.whiteButton} onPress={() => setMode("idle")}>
               <Image
                 source={require("./../../assets/images/yap-icon.png")}
-                style={{ width: scale(25), height: scale(25) }}
+                style={{ width: scale(24), height: scale(24) }}
                 resizeMode="contain"
               />
             </TouchableOpacity>
@@ -913,7 +913,8 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     // paddingVertical: verticalScale(15),
     // paddingHorizontal: scale(15),
-    marginBottom: verticalScale(25),
+    marginBottom: verticalScale(20),
+    marginTop: verticalScale(10),
     width: '100%',
   },
   // inputField: {
@@ -972,8 +973,8 @@ const styles = StyleSheet.create({
 
   // Buttons
   whiteButton: {
-    width: scale(55),
-    height: scale(55),
+    width: scale(50),
+    height: scale(50),
     backgroundColor: COLORS.white,
     borderRadius: scale(50),
     marginRight: scale(10),
@@ -990,24 +991,25 @@ const styles = StyleSheet.create({
     }),
   },
   sendButton: {
-    width: scale(45),
-    height: scale(45),
-    borderRadius: scale(22.5),
+    width: scale(50),
+    height: scale(50),
+    borderRadius: scale(30),
     minWidth: scale(44),
     minHeight: scale(44),
+    
   },
   buttonGradient: {
     width: '100%',
     height: '100%',
-    borderRadius: scale(22.5),
+    borderRadius: scale(30),
     justifyContent: 'center',
     alignItems: 'center',
   },
   sendButtonLg: {
-    width: scale(55),
-    height: scale(55),
+    width: scale(50),
+    height: scale(50),
     borderRadius: scale(27.5),
-    marginRight: scale(10),
+    // marginRight: scale(10),
   },
   sendButtonGradient: {
     width: '100%',
@@ -1019,8 +1021,8 @@ const styles = StyleSheet.create({
 
   // Choice options
   choiceOptionsContainer: {
-    paddingHorizontal: scale(15),
-    paddingVertical: verticalScale(20),
+    // paddingHorizontal: scale(15),
+    // paddingVertical: verticalScale(20),
     width: '100%',
   },
   choiceOptionsGrid: {
@@ -1095,9 +1097,9 @@ const styles = StyleSheet.create({
   // CTA wrapper
   CTAWrapper: {
     flexDirection: 'row',
-    paddingVertical: verticalScale(15),
-    paddingHorizontal: scale(15),
-    marginBottom: verticalScale(25),
+    // paddingVertical: verticalScale(15),
+    // paddingHorizontal: scale(15),
+    marginBottom: verticalScale(20),
     justifyContent: 'space-between',
     alignItems: 'center',
     width: '100%',
