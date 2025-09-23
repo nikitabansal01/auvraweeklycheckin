@@ -4,14 +4,13 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
-import { Dimensions, Image, ImageBackground, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Dimensions, Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
 import { FONT_FAMILIES, useAppFonts } from '../../lib/fonts';
-
 // Constants from Figma design
 const BACKGROUND_VECTOR_IMAGE = "http://localhost:3845/assets/cf926b4d5ec2719e28f1af07e084ed30c131abe4.svg";
-const MILESTONE_BG_IMAGE = require("../../assets/images/milestone-bg.png");
+// const MILESTONE_BG_IMAGE = require("../../assets/images/milestone-bg.png");
 const BLOOD_REPORT_IMAGE = require("../../assets/images/blood-report-logo.png");
 
 // Responsive dimensions
@@ -22,22 +21,23 @@ const isIOS = Platform.OS === 'ios';
 // Responsive scaling using react-native-size-matters
 // No need for manual scaling factors
 
+
 // Gradient Text Component
 function GradientText({ children, style }: { children: string; style?: any }) {
   return (
     <MaskedView
-      style={{ 
-        flexDirection: 'row', 
+      style={{
+        flexDirection: 'row',
         height: Math.round(verticalScale(style?.lineHeight || 20)),
-        ...(isAndroid && { 
+        ...(isAndroid && {
           renderToHardwareTextureAndroid: true,
-          needsOffscreenAlphaCompositing: true 
+          needsOffscreenAlphaCompositing: true
         } as any)
       }}
       maskElement={
         <Text style={[
-          style, 
-          { 
+          style,
+          {
             backgroundColor: 'transparent',
             includeFontPadding: isAndroid ? false : undefined,
             textAlignVertical: isAndroid ? 'center' : undefined,
@@ -47,21 +47,21 @@ function GradientText({ children, style }: { children: string; style?: any }) {
         </Text>
       }
     >
-      <LinearGradient 
+      <LinearGradient
         colors={['#A29AEA', '#C17EC9', '#D482B9', '#E98BAC', '#FDC6D1']}
         locations={[0, 0.3654, 0.571, 0.8336, 1.142]}
-        start={{ x: 0, y: 0 }} 
+        start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
-        style={{ 
+        style={{
           flex: 1,
-          ...(isAndroid && { 
-            renderToHardwareTextureAndroid: true 
+          ...(isAndroid && {
+            renderToHardwareTextureAndroid: true
           } as any)
         }}
       >
         <Text style={[
-          style, 
-          { 
+          style,
+          {
             opacity: 0,
             includeFontPadding: isAndroid ? false : undefined,
             textAlignVertical: isAndroid ? 'center' : undefined,
@@ -79,12 +79,12 @@ function ProgressGradient({ progress }: { progress: number }) {
   // Full gradient colors and their positions
   const fullColors = ['#A29AEA', '#C17EC9', '#D482B9', '#E98BAC', '#FDC6D1'] as const;
   const fullLocations = [0, 0.3, 0.6, 0.8, 1] as const;
-  
+
   // Calculate which colors to show based on progress
   const progressDecimal = progress / 100;
   const visibleColors: string[] = [];
   const visibleLocations: number[] = [];
-  
+
   for (let i = 0; i < fullColors.length; i++) {
     if (fullLocations[i] <= progressDecimal) {
       visibleColors.push(fullColors[i]);
@@ -92,16 +92,16 @@ function ProgressGradient({ progress }: { progress: number }) {
       visibleLocations.push(fullLocations[i] / progressDecimal);
     }
   }
-  
+
   // Ensure we have at least 2 colors for a gradient
   if (visibleColors.length < 2) {
     visibleColors.push(fullColors[1]);
     visibleLocations.push(1);
   }
-  
+
   // Ensure locations array is valid (all values between 0 and 1)
   const validLocations = visibleLocations.map(loc => Math.min(Math.max(loc, 0), 1));
-  
+
   return (
     <LinearGradient
       colors={visibleColors as any}
@@ -109,8 +109,8 @@ function ProgressGradient({ progress }: { progress: number }) {
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
       style={[
-        styles.progressFill, 
-        { 
+        styles.progressFill,
+        {
           width: `${progress}%`,
           ...(isAndroid && { renderToHardwareTextureAndroid: true })
         }
@@ -167,6 +167,30 @@ export default function Rewards() {
 
   const navigateToIndex = () => {
     router.back();
+  };
+
+  const Animation = () => {
+    if (Platform.OS === "web") {
+      const Lottie = require("lottie-react").default;
+      return (
+        <Lottie
+          animationData={require("../../assets/animations/moving-glow-bg.json")}
+          loop
+          autoPlay
+          style={styles.streakBackgroundAnimation}
+        />
+      );
+    } else {
+      const LottieView = require("lottie-react-native").default;
+      return (
+        <LottieView
+          source={require("../../assets/animations/moving-glow-bg.json")}
+          autoPlay
+          loop
+          style={styles.streakBackgroundAnimation}
+        />
+      );
+    }
   };
 
   const claimReward = (rewardId: string) => {
@@ -283,49 +307,49 @@ export default function Rewards() {
         requiredStreakDays: 18,
         state: 'in_progress',
       },
-       {
-         id: "10",
-         title: "First signs of improvement",
-         description: "Start to feel relief for top concerns",
-         icon: "✨",
-         backgroundColor: COLORS.lightYellow,
-         streak: "21 day streak",
-         requiredStreakDays: 21,
-         state: 'in_progress',
-       },
-       // Rise Rewards
-       {
-         id: "11",
-         title: "2x plan refresh",
-         description: "Additional refreshes for the action plan",
-         icon: "🧊",
-         backgroundColor: COLORS.lightBlue,
-         streak: "12 days to go",
-         requiredStreakDays: 16,
-         state: 'in_progress',
-       },
-       {
-         id: "12",
-         title: "Cravings made healthy",
-         description: "Personalize support for food cravings",
-         icon: "🥮",
-         backgroundColor: COLORS.lightViolet,
-         streak: "18 day streak",
-         requiredStreakDays: 18,
-         state: 'in_progress',
-       },
-       {
-         id: "13",
-         title: "First signs of improvement",
-         description: "Start to feel relief for top concerns",
-         icon: "✨",
-         backgroundColor: COLORS.lightYellow,
-         streak: "21 day streak",
-         requiredStreakDays: 21,
-         state: 'in_progress',
-       },
-     ];
-   };
+      {
+        id: "10",
+        title: "First signs of improvement",
+        description: "Start to feel relief for top concerns",
+        icon: "✨",
+        backgroundColor: COLORS.lightYellow,
+        streak: "21 day streak",
+        requiredStreakDays: 21,
+        state: 'in_progress',
+      },
+      // Rise Rewards
+      {
+        id: "11",
+        title: "2x plan refresh",
+        description: "Additional refreshes for the action plan",
+        icon: "🧊",
+        backgroundColor: COLORS.lightBlue,
+        streak: "12 days to go",
+        requiredStreakDays: 16,
+        state: 'in_progress',
+      },
+      {
+        id: "12",
+        title: "Cravings made healthy",
+        description: "Personalize support for food cravings",
+        icon: "🥮",
+        backgroundColor: COLORS.lightViolet,
+        streak: "18 day streak",
+        requiredStreakDays: 18,
+        state: 'in_progress',
+      },
+      {
+        id: "13",
+        title: "First signs of improvement",
+        description: "Start to feel relief for top concerns",
+        icon: "✨",
+        backgroundColor: COLORS.lightYellow,
+        streak: "21 day streak",
+        requiredStreakDays: 21,
+        state: 'in_progress',
+      },
+    ];
+  };
 
   // Dynamically filter rewards based on their current state
   const seedRewards = getAllRewards().filter(item => {
@@ -359,17 +383,17 @@ export default function Rewards() {
     return null; // or a loading component
   }
 
-// Sample data based on Figma design
-const milestones: Milestone[] = [
-  { id: "1", name: "Seed", day: "Day 7", isActive: true },
-  { id: "2", name: "Grow", day: "Day 30", isActive: false },
-  { id: "3", name: "Rise", day: "Day 60", isActive: false },
-  { id: "4", name: "Peak", day: "Day 180", isActive: false },
-  { id: "5", name: "Glow", day: "Day 270", isActive: false },
-];
+  // Sample data based on Figma design
+  const milestones: Milestone[] = [
+    { id: "1", name: "Seed", day: "Day 7", isActive: true },
+    { id: "2", name: "Grow", day: "Day 30", isActive: false },
+    { id: "3", name: "Rise", day: "Day 60", isActive: false },
+    { id: "4", name: "Peak", day: "Day 180", isActive: false },
+    { id: "5", name: "Glow", day: "Day 270", isActive: false },
+  ];
 
   const renderLabsSection = () => (
-    
+
     <LinearGradient
       colors={[
         'rgba(162, 154, 234, 0.5)',
@@ -397,7 +421,7 @@ const milestones: Milestone[] = [
         <View style={styles.labsCard}>
           <View style={styles.labsIconContainer}>
             <View style={styles.labsIcon}>
-              <Image 
+              <Image
                 source={BLOOD_REPORT_IMAGE}
                 style={styles.bloodReportIcon}
                 resizeMode="contain"
@@ -437,104 +461,111 @@ const milestones: Milestone[] = [
 
   const renderStreakSection = () => (
     <>
-      <ImageBackground
+      {/* <ImageBackground
         source={MILESTONE_BG_IMAGE}
         style={styles.streakSection}
         resizeMode="contain"
-    >
-      {/* Gradient overlay */}
-      <LinearGradient
-        colors={['rgba(252, 244, 255, 0)', 'rgba(221, 194, 233, 0.5)']}
-        locations={[0, 1]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={styles.streakGradientOverlay}
-      />
-      
-      <View style={styles.streakHeader}>
-        <Text style={styles.streakTitle}>🎁 Milestones & Rewards 🎁</Text>
-        
-        <View style={styles.streakNumberContainer}>
-          <View style={styles.streakNumberGradient}>
-<MaskedView 
-              maskElement={
-                <Text style={[
-                  styles.streakNumber, 
-                  { 
-                    backgroundColor: "transparent",
-                    includeFontPadding: isAndroid ? false : undefined,
-                    textAlignVertical: isAndroid ? 'center' : undefined,
-                  }
-                ]}>
-                  9
-                </Text>
-              }
-              style={[
-                { 
-                  height: Math.round(styles.streakNumber.lineHeight || 100),
-                  ...(isAndroid && { 
-                    renderToHardwareTextureAndroid: true,
-                    needsOffscreenAlphaCompositing: true 
-                  } as any)
+      > */}
+
+      {/* Background Animation instead of Image */}
+        {/* <Animation /> */}
+
+        {/* Gradient overlay */}
+<View style={styles.streakSection}>
+<Animation />
+        <LinearGradient
+          colors={['rgba(252, 244, 255, 0)', 'rgba(221, 194, 233, 0.5)']}
+          locations={[0, 1]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={styles.streakGradientOverlay}
+        />
+       
+        <View style={styles.streakHeader}>
+          <Text style={styles.streakTitle}>🎁 Milestones & Rewards 🎁</Text>
+
+          <View style={styles.streakNumberContainer}>
+            <View style={styles.streakNumberGradient}>
+              <MaskedView
+                maskElement={
+                  <Text style={[
+                    styles.streakNumber,
+                    {
+                      backgroundColor: "transparent",
+                      includeFontPadding: isAndroid ? false : undefined,
+                      textAlignVertical: isAndroid ? 'center' : undefined,
+                    }
+                  ]}>
+                    9
+                  </Text>
                 }
-              ]}
-            >
-              <LinearGradient 
-                colors={[COLORS.gradPurple, COLORS.gradPink]} 
-                start={{ x: 0, y: 0 }} 
-                end={{ x: 1, y: 0 }}
-                style={{ 
-                  flex: 1,
-                  ...(isAndroid && { 
-                    renderToHardwareTextureAndroid: true 
-                  } as any)
-                }}
-              >
-                <Text style={[
-                  styles.streakNumber, 
-                  { 
-                    opacity: 0,
-                    includeFontPadding: isAndroid ? false : undefined,
-                    textAlignVertical: isAndroid ? 'center' : undefined,
+                style={[
+                  {
+                    height: Math.round(styles.streakNumber.lineHeight || 100),
+                    ...(isAndroid && {
+                      renderToHardwareTextureAndroid: true,
+                      needsOffscreenAlphaCompositing: true
+                    } as any)
                   }
-                ]}>
-                  9
-                </Text>
-              </LinearGradient>
-            </MaskedView>
-          </View>
-          <Text style={styles.streakLabel}>day streak</Text>
-          <View style={styles.streakTextContainer}>
-          <View style={styles.top20Badge}>
-            <Text style={styles.top20Text}>You are amongst the top 20% now!</Text>
-          </View>
+                ]}
+              >
+                <LinearGradient
+                  colors={[COLORS.gradPurple, COLORS.gradPink]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={{
+                    flex: 1,
+                    ...(isAndroid && {
+                      renderToHardwareTextureAndroid: true
+                    } as any)
+                  }}
+                >
+                  <Text style={[
+                    styles.streakNumber,
+                    {
+                      opacity: 0,
+                      includeFontPadding: isAndroid ? false : undefined,
+                      textAlignVertical: isAndroid ? 'center' : undefined,
+                    }
+                  ]}>
+                    9
+                  </Text>
+                </LinearGradient>
+              </MaskedView>
+            </View>
+            <Text style={styles.streakLabel}>day streak</Text>
+            <View style={styles.streakTextContainer}>
+              <View style={styles.top20Badge}>
+                <Text style={styles.top20Text}>You are amongst the top 20% now!</Text>
+              </View>
+            </View>
           </View>
         </View>
-      </View>
-    </ImageBackground>
+</View>
+      {/* </ImageBackground> */}
       <View style={styles.milestonesContainer}>
         <View style={styles.milestonesProgress}>
           {/* Background decorative vectors */}
           <View style={styles.milestoneVector1} />
           <View style={styles.milestoneVector2} />
-          
+
           {/* Progress line */}
           <View style={styles.progressLine} />
           <View style={styles.progressLineActive} />
-          
+
           {milestones.map((milestone, index) => (
             <View key={milestone.id} style={styles.milestoneItem}>
-      <View style={[
-        styles.milestoneDot,
+              <View style={[
+                styles.milestoneDot,
                 { backgroundColor: milestone.isActive ? COLORS.warmPurple : '#D9D9D9' }
-      ]} />
+              ]} />
               <View style={styles.milestoneTextContainer}>
-        <Text style={[
-          styles.milestoneName,
+                <Text style={[
+                  styles.milestoneName,
                   { color: milestone.isActive ? COLORS.warmPurple : COLORS.greyLight }
-        ]}>
-          {milestone.name}
-        </Text>
+                ]}>
+                  {milestone.name}
+                </Text>
                 <Text style={[
                   styles.milestoneDay,
                   { color: milestone.isActive ? COLORS.warmPurple : COLORS.greyLight }
@@ -546,7 +577,7 @@ const milestones: Milestone[] = [
           ))}
         </View>
       </View>
-      </>
+    </>
   );
 
   const renderRewardItem = (item: RewardItem) => {
@@ -558,7 +589,7 @@ const milestones: Milestone[] = [
     return (
       <View key={item.id} style={styles.rewardItem}>
         <View style={[
-          styles.rewardIconContainer, 
+          styles.rewardIconContainer,
           { backgroundColor: item.backgroundColor }
         ]}>
           <Text style={styles.rewardIcon}>{item.icon}</Text>
@@ -586,57 +617,57 @@ const milestones: Milestone[] = [
                 isAndroid ? { renderToHardwareTextureAndroid: true } as any : undefined
               ]}
             >
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.personalizeButton}
                 onPress={() => claimReward(item.id)}
                 activeOpacity={0.7}
               >
-<MaskedView 
-                    maskElement={
-                      <Text style={[
-                        styles.personalizeButtonText, 
-                        { 
-                          backgroundColor: "transparent",
-                          includeFontPadding: isAndroid ? false : undefined,
-                          textAlignVertical: isAndroid ? 'center' : undefined,
-                        }
-                      ]}>
-                        {item.buttonText}
-                      </Text>
-                    }
-                    style={[
-                      { 
-                        height: Math.round(styles.personalizeButtonText.lineHeight || 22),
-                        ...(isAndroid && { 
-                          renderToHardwareTextureAndroid: true,
-                          needsOffscreenAlphaCompositing: true 
-                        } as any)
+                <MaskedView
+                  maskElement={
+                    <Text style={[
+                      styles.personalizeButtonText,
+                      {
+                        backgroundColor: "transparent",
+                        includeFontPadding: isAndroid ? false : undefined,
+                        textAlignVertical: isAndroid ? 'center' : undefined,
                       }
-                    ]}
+                    ]}>
+                      {item.buttonText}
+                    </Text>
+                  }
+                  style={[
+                    {
+                      height: Math.round(styles.personalizeButtonText.lineHeight || 22),
+                      ...(isAndroid && {
+                        renderToHardwareTextureAndroid: true,
+                        needsOffscreenAlphaCompositing: true
+                      } as any)
+                    }
+                  ]}
+                >
+                  <LinearGradient
+                    colors={['#A29AEA', '#C17EC9', '#D482B9', '#E98BAC', '#FDC6D1']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{
+                      flex: 1,
+                      ...(isAndroid && {
+                        renderToHardwareTextureAndroid: true
+                      } as any)
+                    }}
                   >
-                    <LinearGradient 
-                      colors={['#A29AEA', '#C17EC9', '#D482B9', '#E98BAC', '#FDC6D1']} 
-                      start={{ x: 0, y: 0 }} 
-                      end={{ x: 1, y: 0 }}
-                      style={{ 
-                        flex: 1,
-                        ...(isAndroid && { 
-                          renderToHardwareTextureAndroid: true 
-                        } as any)
-                      }}
-                    >
-                      <Text style={[
-                        styles.personalizeButtonText, 
-                        { 
-                          opacity: 0,
-                          includeFontPadding: isAndroid ? false : undefined,
-                          textAlignVertical: isAndroid ? 'center' : undefined,
-                        }
-                      ]}>
-                        {item.buttonText}
-                      </Text>
-                    </LinearGradient>
-                  </MaskedView>
+                    <Text style={[
+                      styles.personalizeButtonText,
+                      {
+                        opacity: 0,
+                        includeFontPadding: isAndroid ? false : undefined,
+                        textAlignVertical: isAndroid ? 'center' : undefined,
+                      }
+                    ]}>
+                      {item.buttonText}
+                    </Text>
+                  </LinearGradient>
+                </MaskedView>
               </TouchableOpacity>
             </LinearGradient>
           )}
@@ -644,7 +675,7 @@ const milestones: Milestone[] = [
             <View style={styles.rewardFooter}>
               <View style={styles.progressBar}>
                 <ProgressGradient progress={
-                  isInProgress 
+                  isInProgress
                     ? Math.min((currentStreakDays / item.requiredStreakDays) * 100, 100)
                     : 70
                 } />
@@ -666,10 +697,10 @@ const milestones: Milestone[] = [
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={isAndroid ? ["top", "left", "right"] : []}>
+    <SafeAreaView style={styles.container} edges={isAndroid ? [] : []}>
       <StatusBar style="dark" backgroundColor={isAndroid ? COLORS.background : COLORS.background} />
-      <ScrollView 
-        style={styles.scrollView} 
+      <ScrollView
+        style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         bounces={isIOS}
@@ -677,7 +708,7 @@ const milestones: Milestone[] = [
       >
         {renderLabsSection()}
         {renderStreakSection()}
-        
+
         <View style={styles.rewardsContainer}>
           {renderDivider("Seed Rewards")}
           <View style={styles.rewardsList}>
@@ -694,7 +725,7 @@ const milestones: Milestone[] = [
             {riseRewards.map(renderRewardItem)}
           </View>
         </View>
-        </ScrollView>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -721,7 +752,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     minHeight: isAndroid ? 200 : undefined,
   },
-  
+
   labsHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -764,7 +795,7 @@ const styles = StyleSheet.create({
     width: scale(36),
   },
   labsContent: {
-    paddingVertical: verticalScale(20),
+    paddingTop: verticalScale(8),
     zIndex: 1,
   },
   labsCard: {
@@ -841,8 +872,8 @@ const styles = StyleSheet.create({
   uploadButtonContainer: {
     paddingHorizontal: scale(0),
     zIndex: 1,
-    marginTop: verticalScale(10),
-    marginBottom: verticalScale(15),
+    marginTop: verticalScale(20),
+    // marginBottom: verticalScale(15),
 
   },
   uploadButton: {
@@ -854,17 +885,17 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: isAndroid ? 5 : 0,
     borderWidth: 0,
-    minHeight: verticalScale(48),
+    // minHeight: verticalScale(48),
   },
   uploadButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: moderateScale(11),
+    paddingVertical: moderateScale(15),
     paddingHorizontal: scale(35),
     gap: moderateScale(3),
-    height: verticalScale(48),
-    minHeight: verticalScale(48),
+    // height: verticalScale(48),
+    // minHeight: verticalScale(48),
   },
   uploadButtonText: {
     fontSize: moderateScale(14, 1.5),
@@ -876,13 +907,33 @@ const styles = StyleSheet.create({
     textAlignVertical: isAndroid ? 'center' : undefined,
   },
   streakSection: {
-    marginBottom: verticalScale(20),
-    gap: verticalScale(30),
-    position: 'relative',
-    overflow: 'hidden',
+    // marginBottom: verticalScale(20),
+    // gap: verticalScale(30),
+    // position: 'relative',
+    // overflow: 'hidden',
+    // backgroundColor: COLORS.white,
+    // minHeight: isAndroid ? 300 : undefined,
+    // width: '100%',
+    position: "relative",
+    overflow: "hidden",
     backgroundColor: COLORS.white,
+    width: "100%",       // ✅ ensure parent covers the whole screen width
     minHeight: isAndroid ? 300 : undefined,
-    width: '100%',
+    
+  
+  },
+  streakBackgroundAnimation: {
+    position: "absolute",
+    top: -50,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    // width: "100%",
+    height: "100%",
+    width: screenWidth, // full device width
+    zIndex: -2, // behind everything
+    minHeight: screenHeight * 0.5, // give a fixed % of screen height (40% here)
+    opacity: 0.6,
   },
   streakGradientOverlay: {
     position: 'absolute',
@@ -890,10 +941,12 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    zIndex: 0,
+    zIndex: 1, // Higher than animation to be on top
+    opacity: 0.8,
   },
   streakHeader: {
     alignItems: 'center',
+    paddingHorizontal: scale(20), // Add padding since container no longer has it
     // gap: 20,
     zIndex: 2,
   },
@@ -904,8 +957,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: FONT_FAMILIES['NotoSerif-Regular'],
     lineHeight: moderateScale(21, 1.5),
-    marginBottom: verticalScale(50),
-    marginTop: verticalScale(40),
+    marginBottom: verticalScale(20),
+    marginTop: verticalScale(30),
     width: '100%',
     includeFontPadding: isAndroid ? false : undefined,
     textAlignVertical: isAndroid ? 'center' : undefined,
@@ -926,11 +979,11 @@ const styles = StyleSheet.create({
     paddingTop: verticalScale(10),
   },
   streakNumber: {
-    fontSize: moderateScale(80, 1.5),
+    fontSize: moderateScale(80, 1),
     fontWeight: '700',
     fontFamily: FONT_FAMILIES['NotoSerif-Regular'],
-    lineHeight: moderateScale(100, 1.5),
-    textAlign: 'center',  
+    lineHeight: moderateScale(100, 0.5),
+    textAlign: 'center',
     verticalAlign: 'middle',
     includeFontPadding: isAndroid ? false : undefined,
     textAlignVertical: isAndroid ? 'center' : undefined,
@@ -963,12 +1016,13 @@ const styles = StyleSheet.create({
   },
   milestonesContainer: {
     width: '100%',
-    paddingVertical: verticalScale(12),
+    paddingTop: verticalScale(40),
+    paddingBottom: verticalScale(40),
     paddingHorizontal: scale(20),
     backgroundColor: COLORS.white,
     borderRadius: 10,
     position: 'relative',
-    overflow: 'hidden',
+    // overflow: 'hidden', // Remove to allow animation to extend beyond
     zIndex: 2,
     marginHorizontal: isAndroid ? 0 : undefined,
   },
@@ -1051,7 +1105,7 @@ const styles = StyleSheet.create({
   dividerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: verticalScale(26),
+    marginBottom: verticalScale(26),
     gap: moderateScale(6),
   },
   dividerLine: {
@@ -1070,7 +1124,7 @@ const styles = StyleSheet.create({
   },
   rewardsList: {
     gap: verticalScale(20),
-    marginBottom: verticalScale(20),
+    marginBottom: verticalScale(26),
   },
   // In progress state styles
   streakTextInProgress: {
@@ -1078,7 +1132,7 @@ const styles = StyleSheet.create({
   },
   rewardItem: {
     flexDirection: 'row',
-    alignItems: 'center',    
+    alignItems: 'center',
     gap: scale(16),
     minHeight: isAndroid ? 80 : undefined,
   },

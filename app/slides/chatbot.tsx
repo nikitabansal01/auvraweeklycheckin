@@ -12,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
 import { FONT_FAMILIES, useAppFonts } from '../../lib/fonts';
 
+
 // Responsive dimensions
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const isAndroid = Platform.OS === 'android';
@@ -531,6 +532,7 @@ export default function Chatbot() {
         contentContainerStyle={styles.scrollContent}
       >
         <Avatar showMessage={false} />
+        <View style={{marginTop: verticalScale(20)}}>
         <View style={styles.messagesWrapper}>
           {messages.map((message, index) => (
             <View key={message.id}>
@@ -544,6 +546,8 @@ export default function Chatbot() {
               )}
             </View>
           ))}
+        </View>
+          
         </View>
       </ScrollView>
 
@@ -729,13 +733,13 @@ export default function Chatbot() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
       <StatusBar style="dark"/>
       {mode === "type" ? (
         <KeyboardAvoidingView
           style={styles.kav}
-          behavior={Platform.OS === "ios" ? "height" : "padding"}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={0}
         >
           {renderContent()}
         </KeyboardAvoidingView>
@@ -744,6 +748,18 @@ export default function Chatbot() {
       )}
     </SafeAreaView>
   );
+  // return (
+  //   <SafeAreaView style={styles.container} edges={["top"]}>
+  //   <StatusBar style="dark" />
+  //   <KeyboardAvoidingView
+  //     style={styles.kav}
+  //     behavior={Platform.OS === "ios" ? "padding" : undefined}
+  //     keyboardVerticalOffset={0}
+  //   >
+  //     {renderContent()}
+  //   </KeyboardAvoidingView>
+  // </SafeAreaView>
+  // );
 }
 
 // Styles
@@ -752,9 +768,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.white,
-    ...(isAndroid && {
-      minHeight: screenHeight,
-    }),
+    // ...(isAndroid && {
+    //   minHeight: screenHeight,
+    // }),
   },
   kav: {
     flex: 1,
@@ -767,7 +783,7 @@ const styles = StyleSheet.create({
   },
   rootIdle: {
     overflow: 'hidden', // Prevent any scrolling in idle mode
-    height: screenHeight, // Fixed height to prevent vertical scroll
+    // height: screenHeight, // Fixed height to prevent vertical scroll
   },
 
   // Background gradients
@@ -776,7 +792,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: verticalScale(150),
+    height: verticalScale(124),
     zIndex: -1,
   },
   gradientFade: {
@@ -784,7 +800,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: verticalScale(150),
+    height: verticalScale(124),
     zIndex: -1,
   },
 
@@ -895,40 +911,64 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    paddingVertical: verticalScale(15),
-    paddingHorizontal: scale(15),
+    // paddingVertical: verticalScale(15),
+    // paddingHorizontal: scale(15),
     marginBottom: verticalScale(25),
     width: '100%',
   },
+  // inputField: {
+  //   flex: 1,
+  //   backgroundColor: COLORS.white,
+  //   borderRadius: scale(10),
+  //   paddingHorizontal: scale(20),
+  //   paddingVertical: verticalScale(15),
+  //   marginRight: scale(10),
+  //   height: verticalScale(50),
+  //   // maxHeight: verticalScale(150),
+  //   width: scale(200),
+  //   borderWidth: 1,
+  //   borderColor: COLORS.outlineVariant,
+  //   ...(isAndroid && {
+  //     elevation: 1,
+  //     shadowColor: COLORS.outlineVariant,
+  //     shadowOffset: { width: 0, height: verticalScale(1) },
+  //     shadowOpacity: 0.1,
+  //     shadowRadius: 1,
+  //   }),
+  // },
   inputField: {
     flex: 1,
     backgroundColor: COLORS.white,
     borderRadius: scale(10),
     paddingHorizontal: scale(20),
-    paddingVertical: verticalScale(12),
+    paddingVertical: verticalScale(15),
     marginRight: scale(10),
-    minHeight: verticalScale(50),
-    maxHeight: verticalScale(150),
+    // height: verticalScale(50),  // ✅ fixed height
     borderWidth: 1,
     borderColor: COLORS.outlineVariant,
-    ...(isAndroid && {
-      elevation: 1,
-      shadowColor: COLORS.outlineVariant,
-      shadowOffset: { width: 0, height: verticalScale(1) },
-      shadowOpacity: 0.1,
-      shadowRadius: 1,
-    }),
   },
   textInput: {
-    fontSize: FONT_SIZES.message,
+    fontSize: FONT_SIZES.small,        // e.g. 14
+    lineHeight: FONT_SIZES.message,// e.g. 18 → taller than font
     color: COLORS.onSurface,
-    minHeight: verticalScale(20),
-    maxHeight: verticalScale(120), // Allow multiline expansion
+    flex: 1,
     includeFontPadding: isAndroid ? false : undefined,
-    textAlignVertical: isAndroid ? 'top' : undefined, // Better for multiline
-    flexWrap: 'wrap',
-    textAlign: 'left',
+    textAlignVertical: isAndroid ? 'center' : undefined, // Better for multiline 
+    paddingVertical: 0,
   },
+  // textInput: {
+  //   fontSize: FONT_SIZES.message,
+  //   // lineHeight: 12,
+  //   color: COLORS.onSurface,
+  //   flex: 1,   
+  //   height: '100%',
+  //   // minHeight: verticalScale(20),
+  //   // maxHeight: verticalScale(120), // Allow multiline expansion
+  //   includeFontPadding: isAndroid ? false : undefined,
+  //   textAlignVertical: isAndroid ? 'top' : undefined, // Better for multiline
+  //   flexWrap: 'wrap',
+  //   textAlign: 'left',
+  // },
 
   // Buttons
   whiteButton: {

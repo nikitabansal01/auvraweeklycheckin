@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Dimensions, Image, Platform, Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { scale, verticalScale } from 'react-native-size-matters';
+import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
 import { FONT_FAMILIES } from '../lib/fonts';
 
 // Responsive dimensions
@@ -12,14 +12,14 @@ const isIOS = Platform.OS === 'ios';
 // Font scaling system using react-native-size-matters
 const FONT_SIZES = {
   // From Figma: Button text (12px Inter Regular) - for "tap", "yap", "type" labels
-  button: scale(12),
+  button: moderateScale(12, 1.5),
   
   // From Figma: Message text (14px Inter Regular)
-  message: scale(14),
+  message: moderateScale(14, 1.5),
   
   // Additional sizes for UI elements
-  caption: scale(10),
-  small: scale(11),
+  caption: moderateScale(10, 1.5),
+  small: moderateScale(11, 1.5),
 };
 
 
@@ -65,8 +65,8 @@ export default function FooterCTA({
 
             <View style={[styles.bottomContainer, disabled ? { opacity: 0.5 } : undefined]}>
                 <View style={styles.btn55Container}>
-                    <TouchableOpacity style={styles.btn50} disabled={disabled} onPress={() => setMode("tap")}>
-                        <Ionicons name="checkmark-circle-outline" size={30} color={COLORS.onPrimaryContainer} />
+                    <TouchableOpacity style={[styles.btn50, disabled && styles.btnDisabled]} disabled={disabled} onPress={() => setMode("tap")}>
+                        <Ionicons name="checkmark-circle-outline" style={{fontSize: moderateScale(24, 1.5)}} color={COLORS.onPrimaryContainer} />
                     </TouchableOpacity>
                     <Text style={styles.btnLabel}>tap</Text>
                 </View>
@@ -113,10 +113,10 @@ export default function FooterCTA({
                             />
                         </Pressable>
                     ) : (
-                        <TouchableOpacity style={styles.btn80} disabled={disabled} onPress={() => setMode("idle")}>
+                        <TouchableOpacity style={[styles.btn80, disabled && styles.btnDisabled]} disabled={disabled} onPress={() => setMode("idle")}>
                             <Image
                                 source={require("../assets/images/yap-icon.png")} // local image
-                                style={{ width: scale(50), height: scale(50) }}
+                                style={{ width: scale(40), height: verticalScale(40) }}
                                 resizeMode="contain"
                             />
                         </TouchableOpacity>
@@ -129,8 +129,8 @@ export default function FooterCTA({
 
                 {/* Right 50 */}
                 <View style={styles.btn55Container}>
-                    <TouchableOpacity style={styles.btn50} disabled={disabled} onPress={()=>{setMode("type")}}> 
-                        <Ionicons name="chatbubble-ellipses-outline" size={30} color={COLORS.onPrimaryContainer} />
+                    <TouchableOpacity style={[styles.btn50, disabled && styles.btnDisabled]} disabled={disabled} onPress={()=>{setMode("type")}}> 
+                        <Ionicons name="chatbubble-ellipses-outline" style={{fontSize: moderateScale(24, 1.5)}} color={COLORS.onPrimaryContainer} />
                     </TouchableOpacity>
                     <Text style={styles.btnLabel}>type</Text>
                 </View>
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "flex-end",
         justifyContent: "space-between",
-        paddingHorizontal: scale(50),
+        paddingHorizontal: scale(39),
         paddingBottom: verticalScale(40)
     },
     btn55Container: {
@@ -169,8 +169,8 @@ const styles = StyleSheet.create({
         width: scale(55)
     },
     btn50: {
-        width: scale(55),
-        height: scale(55),
+        width: scale(50),
+        height: scale(50),
         borderRadius: "50%",
         backgroundColor: COLORS.white,
         alignItems: "center",
@@ -194,8 +194,8 @@ const styles = StyleSheet.create({
     },
     btn80:
     {
-        width: scale(90),
-        height: scale(90),
+        width: scale(80),
+        height: scale(80),
         borderRadius: scale(70),
         backgroundColor: COLORS.white,
         alignItems: "center",
@@ -217,5 +217,12 @@ const styles = StyleSheet.create({
         fontFamily: FONT_FAMILIES['Inter-Regular'],
         includeFontPadding: isAndroid ? false : undefined,
         textAlignVertical: isAndroid ? 'center' : undefined,
+    },
+    btnDisabled: {
+        backgroundColor: COLORS.white,
+        elevation: 0,        // remove Android shadow
+        shadowOpacity: 0,    // remove iOS shadow
+        shadowRadius: 0.3,
+        shadowOffset: { width: 0, height: 0 },
     },
 })
